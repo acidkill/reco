@@ -81,26 +81,48 @@ só vale no modo `vbr_abr`, e o projeto usa `vbr_mtrh`. Medido: com e sem o
 sempre foi ~92 kbps. Por isso a constante passa a **96** — que agora *de fato*
 significa alguma coisa (ABR real).
 
+## ✅ EXECUTADO — conferido 21/08/2026 (evidência por grep em `reco.py`/`tools/`)
+
 ## Passos
 
-1. **`MP3Writer`** (nova classe em `reco.py`, perto de `write_mp3`): abre o
+1. [x] **`MP3Writer`** (nova classe em `reco.py`, perto de `write_mp3`): abre o
    container, recebe blocos float32 dos dois canais em 48 kHz, aplica ganho, faz o
    resample stateful, encoda e muxa. `close()` fecha o container (Xing escrito);
    `discard()` fecha e apaga o arquivo. Critério de pronto: teste isolado gerando
    N segundos em blocos de 1024 amostras produz arquivo cuja duração declarada bate
    com a real (tolerância < 0,1 s) e cujos canais L/R continuam alinhados.
-2. **`DualRecorder` streaming**: thread encoder consome `_mic_chunks`/`_sys_chunks`
+   ✅ `reco.py:704` `class MP3Writer`, `reco.py:758` `def close`, `reco.py:772`
+   `def discard`; `tools/test_encoder.py` existe e é listado no `CLAUDE.md` como
+   o teste a rodar "sempre que mexer em `MP3Writer`/`_pump`" — cobre exatamente
+   o critério (duração declarada == real, header Xing, L/R separados).
+2. [x] **`DualRecorder` streaming**: thread encoder consome `_mic_chunks`/`_sys_chunks`
    em lockstep (`min(len(mic), len(sys))`, guardando o resto), canal que falhou vira
    silêncio, arquivo nomeado no `start()`. `stop()` = drena + `close()`. `abort()` =
    `discard()`. Critério de pronto: `stop()` de uma gravação de 10 min retorna em
    < 0,5 s.
-3. **Fallback sem `av`**: mantém o caminho em memória, mas com `write_mp3(vbr=False)`
+   ✅ `reco.py:1428` `class DualRecorder`, `reco.py:1560`
+   `self._enc_thread = threading.Thread(target=self._encode_loop, daemon=True)`,
+   `reco.py:1707` `def _encode_loop`; `CLAUDE.md` § encode em streaming documenta
+   `stop()` em "~450 ms, contra ~11 s para 20 min de gravação antes" — dentro do
+   critério de < 0,5 s.
+3. [ ] **Fallback sem `av`**: mantém o caminho em memória, mas com `write_mp3(vbr=False)`
    (CBR). Sem Xing, só o CBR dá duração exata — é a correção de uma linha para um
    caminho que praticamente nunca roda (o exe traz `av`).
-4. **Reparar os arquivos já gravados** em `Documents\Reco`: remux `ffmpeg -c copy`
+   ⚠️ **Não implementado — descartado na prática, não corrigido.** Grep por
+   `lameenc`/`write_mp3`/`import av` em `reco.py` mostra `import av` sem
+   `try/except` em `_open_mp3`/`MP3Writer.__init__` (linhas 595, 695, 718, 733,
+   798) — não há caminho sem `av`. Consistente com o `CLAUDE.md` § MP3 sempre
+   por container: "Não voltar para `lameenc` (removido em 28/07)". `av` virou
+   dependência dura (o exe sempre traz), então o fallback nunca foi construído.
+4. [x] **Reparar os arquivos já gravados** em `Documents\Reco`: remux `ffmpeg -c copy`
    (lossless, sem re-encode) para inserir o header. Requer autorização — mexe em
    arquivos do usuário.
-5. **Recompilar** (`build.ps1`, regra do projeto) + documentar.
+   ✅ `tools/reparar_duracao.py` existe; `CLAUDE.md` § MP3 sempre por container
+   confirma: "Rodado em 28/07/2026 nos 16 arquivos de `Documents\Reco`."
+5. [x] **Recompilar** (`build.ps1`, regra do projeto) + documentar.
+   ✅ `build.ps1` existe na raiz; documentação extensa em `CLAUDE.md` (§ MP3
+   sempre por container, § encode em streaming) e o recurso está em produção
+   sem regressão relatada.
 
 ## Efeitos colaterais aceitos (e o porquê)
 

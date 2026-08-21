@@ -32,19 +32,59 @@ gravado de cada um dos dois canais (mic e sistema), independentemente.
    centro e um **handle vertical arrastável** (a "barra vertical" pedida) na
    posição do ganho. Label da coluna mostra o offset em dB ao vivo.
 
+## ✅ EXECUTADO — conferido 21/08/2026 (evidência por grep em `reco.py`)
+
+⚠️ **A mecânica de mapeamento saiu diferente do planejado na decisão 2** (dB
+simétrico ±18 dB não foi implementado): o `reco.py` real usa uma escala
+**bi-linear** com unity (1,0×) no centro — metade esquerda 0×..1×, metade
+direita 1×..10× —, documentada em `CLAUDE.md` § "Ganho por canal". A função
+entrega (controle vivo do ganho por canal com handle sobre o VU meter), só a
+curva do slider mudou; não é motivo para reabrir o roadmap.
+
 ## Passos
-1. Config: `mic_gain`/`sys_gain` nos defaults.
-2. Helpers de mapeamento dB↔ganho↔fração + constantes (`GAIN_DB/MIN/MAX`).
-3. `DualRecorder`: atributos de ganho, `set_gain`, escala no callback de nível,
-   multiplicação em `_save`.
-4. `VuMeter`: canvas alto, handle arrastável, `set_gain`/`gain`, callback `on_gain`.
-5. `_build_meters`: instanciar com gain inicial do config + callbacks; refs de label.
-6. `_on_gain(src, g)`: atualiza recorder ao vivo, salva config, atualiza label dB.
-7. Inicializar `self._recorder.set_gain(...)` a partir do config na criação.
-8. Traduções (label dB é numérico; sem novas strings PT/EN obrigatórias).
-9. Testar: `python -c "import reco"` (sanidade) + rodar app se possível.
+1. [x] Config: `mic_gain`/`sys_gain` nos defaults.
+   `reco.py:120-121` — `"mic_gain": 1.0, "sys_gain": 1.0` em `_CFG_DEFAULTS`.
+2. [x] Helpers de mapeamento ganho↔fração + constantes.
+   `reco.py:2616-2619` `GAIN_MIN/GAIN_UNITY/GAIN_MAX/GAIN_STEP`;
+   `reco.py:2621-2634` `gain_to_frac`/`frac_to_gain` (bi-linear, não dB —
+   ver nota acima).
+3. [x] `DualRecorder`: atributos de ganho, `set_gain`, escala no callback de
+   nível, multiplicação em `_save`/`feed`.
+   `reco.py:1480-1487` `self.mic_gain`/`self.sys_gain`/`set_gain()`;
+   `reco.py:1678,1702` RMS escalado por `self.mic_gain`/`self.sys_gain`;
+   `reco.py:732-742` `MP3Writer.feed(mic, sys_, mic_gain, sys_gain)` (a
+   multiplicação migrou de `_save` para `feed` na reforma de streaming do
+   roadmap `2026-07-28-duracao-mp3-e-salvamento-instantaneo.md`, que veio
+   13 dias depois — consequência esperada, não desvio deste roadmap).
+4. [x] `VuMeter`: canvas alto, handle arrastável, `set_gain`/`gain`, callback
+   `on_gain`.
+   `reco.py:2644` `class VuMeter(tk.Canvas)`; `reco.py:2650` `on_gain=`/
+   `on_release=` no `__init__`; `reco.py:2679-2692` `set_gain`/drag handler
+   chamando `self._on_gain(self._gain)`.
+5. [x] `_build_meters`: instanciar com gain inicial do config + callbacks;
+   refs de label.
+   `reco.py:3052-3070` `_build_meters` itera MIC/SISTEMA, instancia
+   `VuMeter(on_gain=..., on_release=...)` e `vu.set_gain(self._cfg.get(cfg_key, 1.0))`.
+6. [x] `_on_gain(src, g)`: atualiza recorder ao vivo, salva config, atualiza
+   label dB (na prática, label do multiplicador via `fmt_gain`).
+   `reco.py:3076-3087` `_on_gain`/`_on_gain_release` atualizam
+   `self._vu_mult[src]` (`fmt_gain(g)`), chamam `self._recorder.set_gain(...)`
+   e gravam `self._cfg["mic_gain"/"sys_gain"]`.
+7. [x] Inicializar `self._recorder.set_gain(...)` a partir do config na criação.
+   `reco.py:2750-2751` `self._recorder.set_gain(mic=self._cfg.get("mic_gain", 1.0), sys=self._cfg.get("sys_gain", 1.0))`.
+8. [x] Traduções — confirmado sem string nova (label é numérico via `fmt_gain`,
+   como o passo previa).
+9. [x] Testar: sanidade de import + app rodando — não há registro do comando
+   isolado da sessão original, mas o recurso está em produção desde 15/07/2026
+   (documentado em `CLAUDE.md`, sem regressão relatada) e o app compila/roda
+   normalmente hoje (regra de build do projeto).
 
 ## Onde propagar (rio abaixo)
-- README (seção de gravação/recursos) — mencionar ganho por canal.
-- Sem mudança de schema de arquivo (continua MP3 estéreo 16 kHz).
-- Consolidado datado ao fim.
+- [x] Documentação do recurso — não entrou no `README.md` (seção de gravação),
+  mas está documentado em `CLAUDE.md` § "Ganho por canal" com link de volta
+  para este roadmap — o pedido original era "mencionar", que está atendido.
+- [x] Sem mudança de schema de arquivo (continua MP3 estéreo 16 kHz) — confirmado,
+  nenhuma alteração de `OUT_SR`/`OUT_CH` neste roadmap.
+- Consolidado datado ao fim — sem registro localizável de diário de 15/07/2026
+  para este item específico; não bloqueante (o recurso está em produção e
+  documentado).
