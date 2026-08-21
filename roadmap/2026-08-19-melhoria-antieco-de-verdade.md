@@ -508,3 +508,72 @@ Em aberto:
   `dominancia_sistema` compara blocos de 100 ms e realinha a cada 30 s: com os
   canais já alinhados na gravação, ela passa a acertar mais por construção. Vale
   medir numa gravação nova (não medido nesta fase).
+
+---
+
+## 9. Medição pós-Fase 1 nas gravações de 20 e 21/08/2026
+
+Pergunta do Gabriel em 21/08: *"veja se é necessário corrigir o eco dos áudios de
+ontem e hoje"*. Oito gravações medidas com `tools/alinhar_gravacao.py` (relatório,
+sem `--aplicar`) e `tools/medir_aec.py`.
+
+| gravação | dur | trechos com `q` confiável | atraso mediano | faixa | veredito |
+| --- | --- | --- | --- | --- | --- |
+| 20/08 09:33 | 17,1 min | 35/35 | +0 ms | −46..+0 ms | alinhada |
+| 20/08 16:31 | 22,8 min | 44/46 | +0 ms | −26..+106 ms | alinhada |
+| 20/08 17:31 | 1,3 min | 3/3 | −2 ms | −2..+8 ms | alinhada |
+| 21/08 10:41 | 11,0 min | 9/22 | **−199 ms** | −444..+83 ms | **corrigida** |
+| 21/08 11:16 | 4,5 min | 9/9 | **+330 ms** | +68..+497 ms | **corrigida** |
+| 21/08 14:16 | 17,1 min | 30/35 | +0 ms | −46..+24 ms | alinhada |
+| 21/08 15:00 | 38,6 min | 21/78 | +4 ms | −60..+428 ms | eco fraco (ver abaixo) |
+| 21/08 16:52 | 11,9 min | 19/24 | **−130 ms** | −359..+0 ms | **corrigida** |
+
+**A Fase 1 funciona — e não segura salto.** Todas as gravações de 20/08 saíram
+alinhadas de ponta a ponta. Em 21/08, três das cinco começam alinhadas e **saltam**
+350-500 ms no primeiro ou segundo minuto, voltando a zero numa escada de 50 ms por
+minuto — que é exatamente `ALIGN_MAX_AJUSTE` por `ALIGN_RECHECK_S`. Séries medidas
+em trechos de 15 s (`q` = correlação normalizada):
+
+- **16:52** — 0 / −16 / −24 ms até t=45 s → **−359 ms em t=60 s** → volta a 0 em t≈480 s.
+- **11:16** — +118 ms até t=60 s → **+497 ms em t=75 s** → ainda em +281 ms no fim (4,5 min).
+- **10:41** — +83 / ~0 ms até t=45 s → **−495 ms em t=165 s** → −149 ms em t≈390 s.
+
+Causa provável do salto: perda de blocos num dos streams do WASAPI. O `_pump`
+pareia por contagem de amostras, então amostra perdida vira offset permanente — o
+mesmo mecanismo do offset inicial que a Fase 1 corrigiu, só que no meio da
+gravação. Está registrado em `docs/ARMADILHAS.md` (entrada de 21/08).
+
+**Correção aplicada nos três** (`tools/alinhar_gravacao.py --aplicar`, escreve
+`_alinhado.mp3` ao lado, original intacto): residual **0,0 ms no pior trecho** em
+10:41, 11:16 e 16:52. ⚠️ **Em 15:00 o mesmo comando não serve**: com 21/78 trechos
+correlacionáveis o script herda o último deslocamento válido nos trechos mudos e o
+residual do pior trecho ficou em **+318,5 ms** — pior que o original (mediana
++4 ms). O `_alinhado.mp3` desse arquivo foi gerado, medido e apagado. Régua que
+sai daqui: **alinhar pós-fato só vale quando a maioria dos trechos correlaciona**;
+abaixo disso o relatório sem `--aplicar` é a resposta final, não o primeiro passo.
+Prova do ganho no caso limpo (11:16, 9/9 trechos confiáveis):
+
+| | ERLE mediano | atraso por janela | dano na voz |
+| --- | --- | --- | --- |
+| original | +5,6 dB | +118 a +497 ms | +0,3 dB |
+| `_alinhado` | **+12,2 dB** | **0 ms em todas** | +0,0 dB |
+
+Em 16:52 o ERLE mediano não se move (+16,2 dB): as janelas que a métrica escolhe já
+caíam no trecho pós-convergência. O ganho ali está nos ~7 primeiros minutos, que
+deixam de ter eco separado — e na transcrição (abaixo).
+
+**A transcrição de 16:52 é a prova de dano que faltava (§ 7, item "a transcrição
+melhora?").** Feita a partir do MP3 desalinhado, ela repete a interlocutora na
+faixa `Eu:` palavra por palavra, com atraso — *"Interlocutor(es): …não são
+dinâmicas muito legais, porque a primeira é dividir as equipes"* / *"Eu: que a
+primeira é dividir as equipes e tudo mais"* — e alterna com `"Obrigado."` onde o
+AEC zera o mic. Ou seja: com os canais 359 ms fora, o `cancel_echo` não cancela e a
+`dominancia_sistema` atribui ao Gabriel fala que não é dele. Retranscrita do
+`_alinhado.mp3`, o resultado está no § 9.1.
+
+**21/08 15:00 é outro caso, não este.** Acoplamento caixa→mic de **−31,5 dB**
+(fraco), só 21/78 trechos com correlação confiável e ERLE mediano **negativo**
+(−7,8 dB em `medir_aec.py`, −5,9 dB em `medir_eco.py`): não há eco relevante para
+cancelar, e o AEC ligado por config soma energia em vez de tirar. Alinhar não muda
+isso (a mediana já era +4 ms). Fica como pergunta aberta: **vale um guard que
+desliga o `cancel_echo` quando o acoplamento medido é desprezível?**
