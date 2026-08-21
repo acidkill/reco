@@ -174,8 +174,35 @@ correlação não ajuda mas o relógio de B2 ainda funciona.
 - [ ] **D2. Recompilar** (`build.ps1`) — regra do projeto, o exe não reflete o
   fonte sozinho.
 
+### Fase E — ferramenta que não deixa o operador errar
+
+Saiu da própria execução de 21/08, não do desenho:
+
+- [ ] **E1. `alinhar_gravacao.py --aplicar` deve recusar quando não dá para
+  alinhar.** No arquivo de 21/08 15:00 só 21/78 trechos correlacionavam; o script
+  herdou o último deslocamento válido nos trechos mudos e escreveu um
+  `_alinhado.mp3` com residual **+318,5 ms** — pior que o original (mediana
+  +4 ms). Hoje a régua ("só vale quando a maioria dos trechos correlaciona") existe
+  só na documentação. Deve virar guarda: abaixo de ~50% de trechos confiáveis,
+  `--aplicar` recusa com o motivo e manda rodar o relatório, a menos que venha um
+  `--forcar` explícito.
+  *Pronto quando:* o arquivo de 15:00 for recusado e os de 10:41/11:16/16:52
+  continuarem passando.
+- [ ] **E2. `medir_aec.py` com janelas fixas.** Ele escolhe as janelas pelo perfil
+  de energia, e alinhar muda esse perfil — então antes×depois compara **trechos
+  diferentes** (foi o que fez o arquivo de 10:41 "piorar" de +5,6 para +0,5 dB).
+  Aceitar uma lista de janelas (ou um arquivo de referência de onde copiá-las)
+  para que a comparação seja pareada. Registrado em `docs/ARMADILHAS.md`.
+  *Pronto quando:* medir original e `_alinhado` nas mesmas janelas.
+- [ ] **E3. A biblioteca não sabe que existe versão alinhada.** A view
+  "Gravações…" lista `x.mp3` e `x_alinhado.mp3` como dois itens sem relação, e
+  nada impede transcrever o desalinhado por engano — que é exatamente o defeito
+  que gerou a transcrição contaminada de 16:52. Mínimo: marcar visualmente o par e
+  transcrever o alinhado por padrão quando ele existir.
+
 **Ordem recomendada:** A1 → C1/C2 → B → A2 → D. A1 é uma constante e tira 45× de
-folga; C é barato e independente; B é o conserto correto e mais caro.
+folga; C é barato e independente; B é o conserto correto e mais caro. A Fase E é
+independente das outras e pode entrar em qualquer ponto.
 
 ---
 
