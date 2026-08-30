@@ -497,3 +497,51 @@ distintas contra 149 do esquerdo no mesmo trecho, e o downmix ficou no meio
 porque **soma o ruído do pior**. Mas tratar um canal isolado piora tudo: a
 cadeia com compressor depende dos ~4 dB de SNR que a soma dos dois canais dá.
 Régua prática: escolher a fonte **por bloco**, comparando palavras distintas.
+
+---
+
+## `warnings.catch_warnings` NÃO isola por thread — não serve para achar de qual canal veio o glitch (30/08/2026)
+
+**Sintoma.** Um plano razoável para contar as descontinuidades do WASAPI é
+envolver o laço de cada thread de captura em `warnings.catch_warnings(record=True)`
+e ler a lista. Ele parece funcionar e atribui os avisos ao canal **errado**.
+
+**Causa.** `catch_warnings` copia e restaura `warnings.filters` e
+`showwarning` — que são **globais do processo**, não do thread. Nesta build
+(Python 3.14.4, `warnings._use_context == 0`) o bloco de um thread captura o
+que outro emitiu. Medido: dois threads, um dentro do `catch_warnings` e outro
+só emitindo, e o warning do segundo apareceu na lista do primeiro. Com os dois
+threads de captura do `DualRecorder`, cada um também sobrescreve o
+`showwarning` do outro ao entrar e ao sair.
+
+**O que fazer.** Instalar **um** `warnings.showwarning` no `start()` e resolver
+o canal por `threading.current_thread()`, restaurando no `_wind_down`. E não
+esquecer `simplefilter("always", SoundcardRuntimeWarning)`: o registro de
+deduplicação do módulo engole a segunda ocorrência em diante.
+
+## O `soundcard` fabrica silêncio pelo relógio quando o loopback está mudo (30/08/2026)
+
+**Sintoma.** Gravação sem áudio de sistema tocando (fone, reunião silenciosa)
+pode dessincronizar sem que nenhum aviso de descontinuidade apareça — e a
+correlação cruzada é cega ali, porque não há eco para correlacionar.
+
+**Causa.** `_record_chunk` (`mediafoundation.py:735-756`) **não bloqueia**
+esperando o WASAPI: faz polling e, passados `deviceperiod_default * 4` ≈ 40 ms
+sem pacote nenhum, devolve um bloco de zeros **dimensionado pelo relógio**
+(`int(samplerate * elapsed_ns / 1e9)`). Só o **loopback** entra nesse caminho —
+o mic sempre entrega pacote. O `int()` trunca e o `_idle_start_time` avança
+pelo tempo inteiro, então o resto fracionário se perde: até 1 frame por
+disparo, ou ~31 ms/min no pior caso de ociosidade contínua. E esse caminho
+**não** levanta `AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY`.
+
+**O que fazer.** Não tratar "contar o warning de descontinuidade" como cobertura
+completa de perda de amostra: essa via é invisível a ele. Medir com contagem de
+frames × relógio de parede por canal, com a caixa muda. Contexto e plano:
+[roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md](../roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md)
+§ 1.6.
+
+⚠️ **Corolário para quem for aumentar o buffer de captura:** o laço de captura
+sai no `_stop_ev` e o que ficou no buffer do WASAPI é descartado no `__exit__`.
+Com `blocksize=1024` isso são 22 ms; com um buffer de 1 s, passa a ser **até 1
+segundo do fim de toda gravação**. Buffer maior exige drenar a cauda antes de
+sair do `with`, nos dois canais.
