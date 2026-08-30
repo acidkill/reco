@@ -26,18 +26,24 @@ de glitch, sem `AvSetMmThreadCharacteristicsW`, sem
 `tools/test_gravacao_sob_carga.py`. **O defeito segue ativo**: toda gravação
 feita com o PC pesado nasce com risco de salto.
 
-| item | estado em 30/08 |
+| item | estado em 30/08 (2ª passada, fim do dia) |
 | --- | --- |
-| Fases A–E deste md | nenhuma executada |
+| **Fase 0** | **0.1, 0.2 e 0.4 EXECUTADAS** — resultados em § 8. 0.3 depende de B1 |
+| Fases A–E deste md | nenhuma executada (nenhuma linha de `reco.py` mudou) |
 | E1 (`--aplicar` recusar) | não existe; não há `--forcar` em `tools/alinhar_gravacao.py` |
 | E2 (`medir_aec.py` com janelas fixas) | não existe; `escolhe_janelas` ainda escolhe por energia |
 | E3 (biblioteca conhecer o par `_alinhado`) | não existe |
 | Push dos commits `691fdae`/`f5ec0a7` | **feito** (`origin/master` == `HEAD`, push de 28/08) |
-| Documentação | feita e correta: 2 entradas em `docs/ARMADILHAS.md`, hub, diário 21/08 |
+| Documentação | 2 entradas novas em `docs/ARMADILHAS.md` (acoplamento não prediz o AEC; relatório de amostra vazia) |
 | 10:41 e 11:16 | ainda não transcritos (se forem, tem de ser do `_alinhado.mp3`) |
 
-**Acervo:** `Documents\Reco` tem **59 MP3**, dos quais 6 são `_alinhado`. Ou
-seja **53 gravações originais**, e nunca se mediu quantas têm salto.
+**Acervo:** `Documents\Reco` tem **59 MP3**, dos quais 6 são `_alinhado` — **53
+gravações originais**. ~~e nunca se mediu quantas têm salto~~ **Medido em 30/08:
+16 das 43 medíveis (37%) têm salto, espalhadas de 20/07 a 21/08** (§ 8.1).
+
+**Ferramentas criadas nesta passada** (todas somente-leitura, nenhuma toca
+`reco.py` nem escreve MP3): `tools/varrer_acervo.py`, `tools/varrer_aec.py`,
+`tools/test_relogio_captura.py`.
 
 ---
 
@@ -204,29 +210,41 @@ vivo estava ligado. É a variável de confusão mais óbvia do "20/08 saiu perfe
 Barata, sem risco, e é ela que decide o tamanho do resto. **Nada aqui altera
 `reco.py` nem escreve MP3 novo.**
 
-- [ ] **0.1. Varrer o acervo inteiro, só relatório.**
-  `python tools/alinhar_gravacao.py "$env:USERPROFILE\Documents\Reco"` **sem**
-  `--aplicar` — o script já aceita pasta e não escreve nada sem a flag. Anotar,
-  por arquivo: duração, `n_medidos/n_trechos`, mediana, faixa. Salvar a saída em
-  `temp/2026-XX-XX-varredura-acervo.txt`.
-  *Prova:* existir a tabela das 53 gravações originais e a contagem de quantas
-  têm **faixa > 100 ms** (o sintoma de salto), não mediana.
-  *Por que importa:* é o único número que diz se o defeito é raro (dois dias
-  ruins) ou crônico — e é ele que justifica ou dispensa as Fases B/C.
-- [ ] **0.2. Medir a via de § 1.6 sem hardware de reunião.** Script novo
-  `tools/test_relogio_captura.py`: abre os dois recorders por 120 s **com a caixa
-  muda** (nenhum áudio tocando), conta frames entregues por canal e compara com
-  `perf_counter`. Repetir com áudio tocando.
-  *Prova:* um número em ms/min para "deriva do loopback com caixa muda". Abaixo
-  de 1 ms/min, § 1.6 é irrelevante e sai do roadmap; em dezenas de ms/min, ela é
-  co-causa e a Fase B2 vira obrigatória.
+- [x] **0.1. Varrer o acervo inteiro, só relatório.** ✅ **FEITA em 30/08 —
+  resultado em § 8.1: 16 das 43 medíveis (37%) têm salto, 12 delas fora de 21/08.**
+  ⚠️ Feita com `tools/varrer_acervo.py` (**novo**), não com
+  `alinhar_gravacao.py --aplicar`-menos-a-flag como este passo dizia: aquele
+  relatório resume por **mediana**, que § 4.7 já apontara como o resumo errado
+  para este defeito, e não expõe a série por janela. O script novo é somente-leitura
+  e emite pior janela, amplitude da faixa e % do tempo acima de 50 ms.
+  *Prova:* `temp/2026-08-30-varredura-acervo.txt` / `.json` (série completa, com
+  o `q` de cada janela — insumo da calibração que E1 precisa, § 4.3).
+- [x] **0.2. Medir a via de § 1.6 sem hardware de reunião.** ✅ **FEITA em 30/08 —
+  resultado em § 8.3: +4,1 ms/min de deriva relativa, 12× abaixo da capacidade de
+  correção atual. § 1.6 existe, mas NÃO sobe a Fase B2.**
+  `tools/test_relogio_captura.py 120` (**novo**), duas corridas com a caixa muda.
+  ⚠️ O critério que este passo escreveu ("abaixo de 1 ms/min irrelevante; dezenas
+  de ms/min co-causa") deixa **uma zona cinza** entre 1 e "dezenas", e a medida
+  caiu exatamente nela. O critério que decide é comparar com o que o alinhador já
+  corrige — `ALIGN_MAX_AJUSTE`/`ALIGN_RECHECK_S` = 50 ms/min; o script passou a
+  imprimir essa comparação em vez do limiar fixo.
+  ⚠️ O script **mede** se o loopback estava mudo (RMS do canal) em vez de confiar
+  na lembrança do operador — sem isso a medição não é interpretável.
+  *Falta:* a repetição **com áudio tocando**, que sai de graça dentro de D1.
 - [ ] **0.3. Medir o efeito do modo ao vivo na taxa de glitch.** Depende do
   contador de B1 — fica anotado aqui para não sumir, executa depois de B1.
   *Prova:* D1 rodado com e sem `live=true`, comparando a contagem de glitches.
-- [ ] **0.4. Medir ERLE do `cancel_echo` no acervo.** `tools/medir_aec.py` em ~10
-  gravações variadas, registrando o par (ERLE, dano na voz) **e** o acoplamento.
-  *Prova:* a distribuição do ERLE e o limiar de acoplamento abaixo do qual o ERLE
-  fica ≤ 0 dB — que é o número que falta para o guard (§ 6.2).
+- [x] **0.4. Medir ERLE do `cancel_echo` no acervo.** ✅ **FEITA em 30/08**
+  (`tools/varrer_aec.py`, novo — reusa a rotulagem alinhada de `medir_aec.py`).
+  13 gravações medidas de junho a agosto; resultados e a consequência em § 8.2.
+  *Prova:* `temp/2026-08-30-aec-acervo.txt` / `.json`.
+  ⚠️ **A prova que este passo pedia não existe, e isso é o achado.** Ele mandava
+  calibrar "o limiar de acoplamento abaixo do qual o ERLE fica ≤ 0 dB" —
+  pressupondo que o acoplamento separa os dois casos. **Ele não separa:** o AEC
+  piora em −14,4 dB e ajuda (+15,7 dB de ERLE) em −24,1 dB, acoplamento mais
+  fraco. Qualquer corte por acoplamento erra numa das pontas. Consequência
+  direta em § 6.2 — o guard tem de medir o ganho no próprio sinal, e agora isso
+  está provado, não só preferido.
 
 ### Fase A — não perder amostra (prevenção)
 
@@ -325,11 +343,20 @@ correlação não ajuda mas o relógio de B2 ainda funciona **parcialmente** (§
 - [ ] **C2. Recheck mais curto enquanto o residual é grande.** `ALIGN_RECHECK_S`
   vira dinâmico: 15 s enquanto |última estimativa| > 50 ms, 60 s quando está
   alinhado.
-  ⚠️ **C2 sabota C1 se entrar sozinho.** `ALIGN_JANELA_S` = 20 s: com recheck de
-  15 s, duas estimativas consecutivas compartilham **75% do material** e deixam de
-  ser leituras independentes — que é exatamente o que a Guarda 1 de C1 exige.
-  Baixar `ALIGN_JANELA_S` junto (≤ 15 s no modo rápido) ou fazer C1 rejeitar o par
-  sobreposto. Custo: correlação de ≤15 s decimados a cada 15 s (~30 ms de CPU).
+  ⚠️ **C2 sabota C1 se entrar sozinho.** `_al_acumular` (`reco.py:1782`) mantém uma
+  janela **deslizante** dos últimos `ALIGN_JANELA_S`, então a sobreposição entre
+  duas estimativas consecutivas é `(J − R)/J`: hoje (J=20 s, R=60 s) é **0%**;
+  com C2 como escrito (J=20 s, R=15 s) passa a **25%** — e aí as leituras deixam
+  de ser independentes, que é exatamente o que a Guarda 1 de C1 exige.
+  ⚠️ **Correção de 30/08 (2ª passada, card `s2bb49459`):** o número certo é **25%**,
+  não os 75% que a 1ª auditoria escreveu aqui e em § 4.2 — a janela nova traz 15 s
+  de material inédito e só 5 s dos 20 s antigos. **E as duas saídas oferecidas na
+  linha seguinte não são equivalentes:** "fazer C1 rejeitar o par sobreposto" com
+  J=20 s/R=15 s rejeita **todo** par (a sobreposição nunca é zero), o que
+  **desativa C1 permanentemente** sob C2. A única saída que preserva os dois é
+  **baixar `ALIGN_JANELA_S` para 15 s junto com o recheck rápido** (J=R ⇒ 0% de
+  sobreposição). Não é opção de gosto: é requisito.
+  Custo: correlação de ≤15 s decimados a cada 15 s (~30 ms de CPU).
   *Prova (C1+C2):* `python tools/test_alinhamento.py` com **três casos novos** —
   (i) "salto de 500 ms no meio" (deve corrigir em < 60 s de áudio);
   (ii) "sinal periódico com pico secundário estável" (deve **não** aplicar salto);
@@ -410,9 +437,18 @@ canal errado. Desenho corrigido dentro do próprio B1.
 ### 4.2 Furo: C1 e C2 se anulam
 
 C1 apoia-se em "duas leituras concordantes"; C2 encurta o recheck para 15 s sem
-mexer na janela de 20 s, o que faz as leituras compartilharem 75% do material. O
-md original pedia as duas juntas (*"Pronto quando (C1+C2)"*) sem notar. Guardas
+mexer na janela de 20 s, o que faz as leituras compartilharem material. O md
+original pedia as duas juntas (*"Pronto quando (C1+C2)"*) sem notar. Guardas
 adicionadas em C1 e C2.
+
+⚠️ **Corrigido em 30/08 na 2ª passada (card `s2bb49459`):** esta seção dizia
+**75%**; a sobreposição real é `(J − R)/J` = **25%** (J=20 s, R=15 s), porque a
+janela de `_al_acumular` é deslizante e a leitura nova traz 15 s inéditos. O erro
+subestimava a independência das leituras em 3×. Mais relevante que o número: a
+saída "fazer C1 rejeitar o par sobreposto", oferecida em C2 como alternativa
+equivalente a encurtar a janela, **desativa C1 por completo** enquanto C2 estiver
+ativo — com J > R a sobreposição nunca chega a zero, então todo par é rejeitado.
+Baixar `ALIGN_JANELA_S` para 15 s passa a ser **requisito** de C2, não escolha.
 
 Junto disso, a premissa de C1 — *"estimativa ruim não se repete idêntica; salto
 sim"* — **é falsa para sinal periódico**, que repete o mesmo pico secundário.
@@ -562,9 +598,29 @@ interruptor global obrigaria o usuário a adivinhar, arquivo a arquivo, uma cois
 que o código consegue medir. Guard interno é estritamente melhor e não pode
 piorar: no pior caso não dispara e o comportamento é o de hoje.
 
-**O que falta é o limiar, não a decisão** — sai da Fase 0.4. **O que reverteria:**
+~~**O que falta é o limiar, não a decisão** — sai da Fase 0.4.~~ **O que reverteria:**
 a distribuição do acervo mostrando ERLE negativo em arquivos onde o AEC hoje
 ajuda a transcrição (aí o critério é outro, não o ERLE de bloco).
+
+⚠️ **Atualizado em 30/08 pela Fase 0.4 (card `s2bb49459`) — a decisão fica, e
+agora tem prova; a pendência do limiar MORRE.** A frase riscada acima supunha um
+limiar de acoplamento a calibrar. Medidas 13 gravações (§ 8.2), as duas
+populações **se sobrepõem** no acoplamento:
+
+| caso | acoplamento | ERLE |
+| --- | --- | --- |
+| 21/08 15:00 — AEC **piora** | −36,1 dB | **−7,8 dB** |
+| 05/08 11:01 — AEC **piora** | **−14,4 dB** | **−0,5 dB** |
+| 22/06 10:50 — AEC ajuda muito | −24,1 dB | +15,7 dB |
+| 21/08 16:52 — AEC ajuda muito | −17,8 dB | +16,2 dB |
+
+Um corte em −14,4 dB mataria o AEC nos dois melhores casos do acervo; um corte
+em −30 dB deixaria passar o de 05/08. **Não há limiar de acoplamento que
+funcione** — o guard tem de medir o ganho no próprio sinal, exatamente como
+E4 já estava desenhado. O que era a via preferida virou a única via.
+
+Corolário que muda o tamanho de E4: **2 dos 13 arquivos (15%) têm ERLE ≤ 0** —
+o caso de 15:00 não é exceção exótica, é uma fração do uso normal.
 
 ### 6.3 As duas transcrições de 16:52 (card `c2c45518347d4`)
 
@@ -611,6 +667,103 @@ custo.
 Fora do escopo deste md, ainda abertos de antes (roadmap de 19/08): Fase 2 (AEC
 adaptativo), Fase 3 (consertar `tools/medir_eco.py`), Fase 4 (fone/operação),
 teste de estresse de 20 min do modo ao vivo.
+
+---
+
+## 8. Fase 0 EXECUTADA (30/08/2026, card `s2bb49459`) — resultados
+
+Três dos quatro passos rodaram (0.3 depende do contador de B1 e continua aberta).
+Nenhuma linha de `reco.py` mudou. Ferramentas novas, todas somente-leitura:
+`tools/varrer_acervo.py`, `tools/varrer_aec.py`, `tools/test_relogio_captura.py`.
+
+> Os `temp/*.txt|.json` citados como prova **não são versionados** (`temp/` está
+> no `.gitignore`) — são o dado bruto na máquina do Gabriel. Todo número que
+> sustenta uma decisão está reproduzido aqui; para refazer, os comandos são os
+> das próprias linhas 0.1/0.2/0.4 do § 3.
+
+### 8.1 — 0.1: o salto é crônico, não foram "dois dias ruins"
+
+Varridas as **53 gravações originais** em janelas de 15 s
+(`temp/2026-08-30-varredura-acervo.txt`/`.json`), com a métrica que § 4.7 elegeu
+(pior janela e % do tempo acima de 50 ms; **salto** = amplitude da faixa > 100 ms,
+que é o quanto a defasagem mudou *dentro* do arquivo):
+
+| veredito | n | do que é medível |
+| --- | --- | --- |
+| **salto** (amplitude > 100 ms) | **16** | **37%** |
+| desalinhado (pior janela > 50 ms, sem salto) | 17 | 40% |
+| ok | 10 | 23% |
+| sem correlação (fone/caixa muda — não mensurável) | 10 | — |
+
+**43 medíveis, e 33 deles (77%) têm dano audível em algum trecho.** Os saltos vão
+de 20/07 a 21/08 e **12 dos 16 são fora de 21/08** — os piores são 18/08 08:58
+(566 ms) e 21/08 10:41 (566 ms). Ou seja: **a premissa que abriu esta investigação
+("três das cinco de 21/08") era um recorte, não o fenômeno.** § 4.4 desconfiou do
+viés; aqui ele está medido.
+
+**E o alinhamento ao vivo não resolveu.** Ele entrou em 19/08; separando o acervo
+nessa data: **antes, 10 de 30 (33%) com salto; depois, 6 de 13 (46%)**. A amostra
+de depois é pequena e a diferença não é significativa — o que importa é a direção:
+não caiu. Coerente com § 1.4 (o teto de 50 ms/reestimativa leva ~10 min para
+absorver 500 ms) e com o fato de 20/08 16:31 também ter salto (132 ms), contra o
+"as três de 20/08 saíram alinhadas" que o card afirmava.
+
+> **Consequência para o escopo:** a decisão de § 6.1 previa que *"a Fase 0 pode
+> encolher o roadmap inteiro: se o acervo mostrar que só 21/08 teve salto, B2 vira
+> desnecessária"*. **O acervo mostrou o contrário** — o bloco A1+A1b+B1+B3+C1+C2
+> fica inteiro e ganha urgência: 37% das gravações do Gabriel nascem com salto.
+
+### 8.2 — 0.4: o limiar que este passo mandava calibrar não existe
+
+13 gravações de junho a agosto (`temp/2026-08-30-aec-acervo.txt`/`.json`), par
+(ERLE, dano) com rotulagem alinhada + acoplamento. **2 das 13 (15%) têm ERLE ≤ 0** —
+o `cancel_echo` piorando o áudio que vai para o Whisper. Detalhe e a tabela que
+prova a sobreposição: § 6.2 (atualizado). Em uma linha: o AEC piora em −14,4 dB de
+acoplamento e ajuda **+15,7 dB** em −24,1 dB, acoplamento mais fraco — nenhum corte
+por acoplamento funciona, então **E4 tem de medir o ganho no próprio sinal**, como
+já estava desenhado. Dano na voz ficou ≤ 1,7 dB em toda a amostra (gate: ≤ 2 dB).
+
+### 8.3 — 0.2: a via de § 1.6 existe, é pequena, e não muda a ordem
+
+`tools/test_relogio_captura.py 120`, duas corridas, **com a condição medida e não
+lembrada** (o script reporta o RMS do loopback: `0.000000` = mudo de verdade):
+
+| | mic | loopback |
+| --- | --- | --- |
+| buffer real | 1058 frames (22,0 ms) | 1056 frames (22,0 ms) |
+| deriva absoluta | +23,0 ms/min | +27,1 ms/min |
+
+**Deriva relativa (a única que desalinha): +4,1 ms/min**, reproduzida nas duas
+corridas. A absoluta atinge os dois canais juntos e é inofensiva.
+
+O critério de decisão certo **não** é o "1 ms/min" que o passo 0.2 escreveu, e sim
+a capacidade de correção que já existe: `ALIGN_MAX_AJUSTE` (50 ms) por
+`ALIGN_RECHECK_S` (60 s) = **50 ms/min**. Os 4,1 ms/min medidos estão **12× abaixo
+disso** — o alinhador de hoje absorve essa deriva sem esforço, e ela é *acumulada*,
+não abrupta, então não explica salto de centenas de ms.
+
+> **Consequência para o escopo:** a condição de reversão de § 6.1 era *"Fase 0.2
+> mostrando deriva grande com a caixa muda → B2 sobe para logo depois de A1"*.
+> **Ela NÃO se cumpriu.** A ordem decidida (0 → A1+A1b → B1+B3 → C1+C2 → B2 → D)
+> fica de pé, e B2 permanece depois de C.
+>
+> ⚠️ Uma correção a § 1.6: ele previa que só o loopback passaria pela via dos zeros
+> fabricados. Medido, **o mic também deriva** (+23,0 ms/min) — a assimetria real é
+> de 4,1 ms/min, muito menor que os ~31 ms/min que § 1.6 estimou para o pior caso.
+
+### 8.4 — o que a Fase 0 mudou, em uma tabela
+
+| pergunta aberta | resposta medida | efeito |
+| --- | --- | --- |
+| o salto é raro ou crônico? | **37% dos medíveis**, 12 de 16 fora de 21/08 | escopo **não** encolhe; ganha urgência |
+| o alinhamento de 19/08 resolveu? | não (33% → 46%, amostra pequena) | C1+C2 seguem necessários |
+| § 1.6 é co-causa? | +4,1 ms/min, 12× abaixo da correção atual | **B2 fica onde está** |
+| qual o limiar de acoplamento de E4? | **não existe** — as populações se sobrepõem | E4 mede o ganho no sinal |
+| o AEC piorando é exceção? | 2 de 13 (15%) | E4 sobe de prioridade |
+
+**Não medido ainda:** 0.3 (efeito do modo ao vivo na taxa de glitch) — depende do
+contador de B1, executa junto com D1. E a Fase 0.2 só rodou com a caixa **muda**;
+a corrida com áudio tocando fica para D1, que já grava com áudio.
 
 ---
 
