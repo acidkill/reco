@@ -92,19 +92,19 @@ o fluxo automático pós-stop e o clipboard.
 
 ### Fase 1 — núcleo do fluxo (reco.py, sem UI nova)
 
-1. [ ] `DualRecorder._new_writer` + `start`: parâmetro `prefix=None` (None →
+1. [x] `DualRecorder._new_writer` + `start`: parâmetro `prefix=None` (None →
    comportamento atual `gravacao_reco`/`recording_reco`). Nota usa
    `nota`/`note`. — **prova:** `python tools/test_encoder.py` verde e
    `python -c "from reco import is_reco_recording; assert not
    is_reco_recording('nota_2026-08-13_10-00-00.mp3')"` (rodar com o venv do
    projeto, de dentro de `C:\Dev\Reco`).
-2. [ ] `_CFG_DEFAULTS["nota_dir"] = None` (None → mesma pasta das gravações).
+2. [x] `_CFG_DEFAULTS["nota_dir"] = None` (None → mesma pasta das gravações).
    Chave NOVA com default: NÃO precisa de `CFG_MIGRACAO` — mas **verificar em
    `load_config()`** que default novo faz merge com config existente (regra
    do CLAUDE.md § config). — **prova:** apagar `nota_dir` do
    `~/.reco_config.json` de teste e conferir que `load_config()` devolve a
    chave.
-3. [ ] `_start_nota()`: guards de `_start_rec` (~l.3390) — captura
+3. [x] `_start_nota()`: guards de `_start_rec` (~l.3390) — captura
    disponível, **mic obrigatório** (sem mic → status de erro, não grava),
    nada gravando/transcrevendo. Seta `self._nota = True`, **ignora o config
    `live`** (nota é curta; rascunho não paga o acelerador), chama
@@ -113,10 +113,10 @@ o fluxo automático pós-stop e o clipboard.
    gravações), NUNCA para `nota_dir`: o destino custom será o cérebro, cujo
    hook de backup pusha sem revisão — áudio não pode nascer lá. — **prova:**
    passo 6.
-4. [ ] Branch em `_after_stop` (~l.3540): `self._nota` → pular o "Escolha o
+4. [x] Branch em `_after_stop` (~l.3540): `self._nota` → pular o "Escolha o
    que fazer" e disparar a transcrição direto (espelhar o encadeamento de
    `_conclude_transcribe_and_delete`, estados STOPPED→IDLE via `done`).
-5. [ ] `done` da nota (novo, molde em `_transcribe_recording.done`):
+5. [x] `done` da nota (novo, molde em `_transcribe_recording.done`):
    - erro/cancelado → mp3 FICA em `_out_dir` (status "Nota preservada:
      `<nome>`" + balão se escondido), `self._nota = False`, IDLE;
    - sucesso → gravar `nota_<ts>.md` em `nota_dir` resolvido (None →
@@ -130,6 +130,11 @@ o fluxo automático pós-stop e o clipboard.
    destino com o texto; `powershell Get-Clipboard` devolve o caminho entre
    aspas; o mp3 sumiu da pasta de gravações (Lixeira). Repetir com
    transcrição forçada a falhar (ex.: modelo removido) → mp3 preservado.
+   **Pulado nesta execução (sessão headless, sem humano falando/confirmando
+   UI) — ver "Pendências de decisão" abaixo.** Proxy automatizado rodado no
+   lugar: gravação real de 3 s só-mic/mono/`prefix="nota"` confirma prefixo,
+   1 canal e `is_reco_recording()==False` (script descartável em
+   `temp/2026-08-21-verificar-nota-prefix.py`, fora do versionamento).
 
 ### Fase 2 — UI e config
 
@@ -203,3 +208,87 @@ o fluxo automático pós-stop e o clipboard.
   executada (pasta + exceção de órfão no gate); antes disso, usar o default.
 - Sabatina: conceitos aplicados — `via-negativa` (escopo podado acima);
   demais conceitos do acervo não se aplicam a este alvo.
+
+## Relatório de execução — Fase 1 (2026-08-21, sessão fbd7aeb5)
+
+Executado via card `6d5bebccb1cd`, modo maestro central (sem humano lendo o
+terminal — decisão pulável foi pulada e registrada, não tomada por conta
+própria).
+
+**Passos 1-5: feitos, provas verdes.**
+
+1. `DualRecorder._new_writer`/`start` ganharam `prefix=None` (comportamento
+   antigo preservado quando ausente). Prova: `python tools/test_encoder.py`
+   → `TUDO OK` (4 blocos, inclui duração/header Xing/separação de canais/
+   pump); `is_reco_recording('nota_2026-08-13_10-00-00.mp3')` → `False`,
+   `is_reco_recording('gravacao_reco_...')` → `True`.
+2. `_CFG_DEFAULTS["nota_dir"] = None`. Prova: `load_config()` com um
+   `~/.reco_config.json` de teste sem a chave `nota_dir` devolveu
+   `cfg["nota_dir"] is None` — confirma o merge (`dict(_CFG_DEFAULTS)` +
+   `cfg.update(saved)`) sem precisar de `CFG_MIGRACAO` (chave nova com
+   default, não mudança de default existente).
+3. `_start_nota()` novo: guards (captura disponível, mic obrigatório,
+   `self._state == IDLE and not self._transcribing`), seta `self._nota =
+   True`, ignora `live`, chama `recorder.start(mic_id, None, out_channels=1,
+   prefix="nota"/"note", out_dir=self._out_dir)`.
+4. `_after_stop`: branch `self._nota` inserido ANTES do `elif
+   self._live_was_on` — pula o "Escolha o que fazer" e chama
+   `_run_nota_final_pass(path)`.
+5. `_run_nota_final_pass` (novo, ao lado de `_run_live_final_pass`): erro →
+   mp3 preservado em `_out_dir`, status "Nota preservada: `<nome>` — `<erro>`"
+   + balão, `self._nota = False`, `IDLE`. Sucesso → `.md` (nome =
+   `<stem-do-mp3>.md`, reaproveita o timestamp já no nome) em `nota_dir`
+   resolvido (`None` → `_out_dir`, `mkdir(parents=True)` se faltar),
+   `clipboard_clear()` + `clipboard_append(f'"{md}"')`,
+   `_excluir_gravacao(path)` (Lixeira), status "Nota pronta — caminho
+   copiado" + balão, `IDLE`. i18n: 6 strings novas com par em `_TR_EN`
+   (não exigido pela Fase 1 — check_i18n.py é item da Fase 2 — mas feito
+   por não deixar par faltando).
+
+**Passo 6: pulado — ver "Pendências de decisão" abaixo.** Proxy automatizado
+rodado no lugar (não é o gate declarado, é a validação possível sem humano):
+`temp/2026-08-21-verificar-nota-prefix.py` gravou 3 s reais só-mic pelo
+`DualRecorder.start(mic_id, None, out_channels=1, prefix="nota")` (mesma
+chamada que `_start_nota()` faz) — confirma prefixo `nota_`, 1 canal e
+`is_reco_recording() == False` no arquivo real gerado. **Não** cobre: o botão
+Tk (não existe ainda — é Fase 2), a transcrição de fato, o clipboard via
+`clipboard_append`, nem o cenário de erro forçado (modelo removido).
+
+**Regra do projeto (recompilar sempre que `reco.py` muda):** `build.ps1`
+disparado; ver resultado na notificação de background — se verde, o
+`dist\Reco\Reco.exe --selftest` foi conferido também; se precisou do Gabriel
+fechar o app em uso, está registrado abaixo.
+
+**Arquivos tocados:** `reco.py` (único arquivo versionado alterado);
+`temp/2026-08-21-verificar-nota-prefix.py` (script descartável,
+`temp/` é gitignored — não entra no commit); este roadmap (checkboxes 1-5 +
+esta seção).
+
+## Pendências de decisão (execução 2026-08-21)
+
+1. **F1.6 (teste manual real) não pode rodar numa sessão headless.** O passo
+   pede um humano falando ~5 s no microfone e conferindo `Get-Clipboard`/o
+   `.md`/a Lixeira — não há UI (botão) ainda nesta fase, então mesmo o
+   disparo do fluxo dependeria de chamar `_start_nota()` fora do app real ou
+   de esperar a Fase 2. Opções: **A)** Gabriel roda manualmente (via um
+   REPL/`python -i reco.py` ou aguardando a Fase 2 ter o botão) — mais fiel
+   ao gate declarado; **B)** aceitar o proxy automatizado já rodado (grava
+   real, mono, prefixo certo) como suficiente para destravar a Fase 2 e
+   adiar a confirmação completa (transcrição + clipboard + Lixeira) para o
+   teste manual da Fase 3 (que já reexecuta "o teste real da F1.6 no fluxo
+   completo com botão"). **Recomendo B** — a Fase 3 já tem esse teste
+   completo no roteiro (item 1), então adiar não perde cobertura, só a
+   adia para quando existir botão de verdade para clicar (mais realista que
+   simular via REPL). Não decidido: o checkbox 6 continua `[ ]`.
+
+## Linhagem
+
+> Escrita pelo maestro ao fim de cada rodada (`registrar_linhagem`). É o
+> registro de QUEM fez o quê neste roadmap: o arquiteto que o desenhou, os
+> executores que o cumpriram, custo e commit de cada passo. Serve à revisão
+> do fable — ele lê o desenho E a execução, não só o resultado.
+
+| quando | card | papel | modelo | custo | sinal | commit |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-08-21 23:29 | `6d5bebccb1cd` | executor | sonnet | US$ 2.50 | esperando | `f5ec0a7` |
+| 2026-08-30 20:09 | `6d5bebccb1cd` | executor | sonnet | US$ 0.52 | esperando | `894840f` |
