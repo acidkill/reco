@@ -231,6 +231,14 @@ Rodam pelo fonte, com o venv do projeto — não entram no executável.
   widget (`ttk.Treeview` só aceita imagem na coluna `#0`; célula de coluna
   comum é texto), não escolha de escopo. **O filesystem é o banco** (mp3 +
   .txt + .resumo.md lado a lado) — sem SQLite, de propósito.
+- ⚠️ **A biblioteca lê só `x.txt`; o `tools/transcrever.py` escreve `x.mp3.txt`**
+  — 14 dos 47 `.txt` da pasta são invisíveis para a view (sem ✓, fora da busca por
+  conteúdo). Ler as duas convenções, escrever uma: `docs/ARMADILHAS.md` §
+  "A biblioteca não enxerga as transcrições do `tools/transcrever.py`".
+- ⚠️ **Áudio corrigido não apaga texto velho:** existindo `x_alinhado.mp3`, ele é a
+  fonte canônica da transcrição do par; o `.txt` do original sobrevive, só deixa de
+  ser o mostrado. Regra completa em
+  [roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md](roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md) § 6.6.
 - **✦ Resumo IA**: roda `claude -p --model sonnet` (CLI do Claude Code do
   usuário, via `shutil.which`) com a transcrição no stdin e salva
   `<gravação>.resumo.md`; se já existe, abre (refazer = excluir o .md). Sem

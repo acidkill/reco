@@ -22,6 +22,14 @@ de correção.
 > `cancel_echo` está a 3 ms de saturar nos arquivos medidos (§ 4.12); e o ERLE
 > negativo **anda junto com o salto** — cruzamento em § 8.5 (§ 4.13). E4 reescrito,
 > § 6.2 corrigida, decisão nova em § 6.5.
+>
+> **4ª passada em 2026-08-30** (fable, card `c2c45518347d4`, o das duas
+> transcrições de 16:52). Eixo **E / biblioteca** apenas — A–D não foram
+> reabertas. Achado que muda a decisão já tomada: **a transcrição "limpa" de
+> 16:52 é invisível para o app** (§ 4.14), então § 6.3 renomeia a errada mas não
+> promove a certa. E3 partido em E3a+E3b, passo **E0** novo (aplicar § 6.3 no
+> disco, nas duas pontas), § 6.3 corrigida e **§ 6.6 decide a regra geral** que o
+> card pedia e que nenhuma seção tinha.
 
 ---
 
@@ -51,12 +59,14 @@ hunks do modo nota deslocam tudo em ~10 linhas. **Ancorar por símbolo**
 | Fases A–E deste md | nenhuma executada (nenhuma linha de `reco.py` mudou por este md) |
 | E1 (`--aplicar` recusar) | não existe; não há `--forcar` em `tools/alinhar_gravacao.py` |
 | E2 (`medir_aec.py` com janelas fixas) | não existe; `escolhe_janelas` ainda escolhe por energia |
-| E3 (biblioteca conhecer o par `_alinhado`) | não existe |
+| E3 (biblioteca conhecer o par `_alinhado`) | não existe; virou **E3a+E3b** (§ 4.14) |
+| **E0 (aplicar § 6.3 no disco)** | **não feita** — nenhum dos dois `.txt` de 16:52 foi renomeado; é o passo do card `c2c45518347d4` e não toca em código |
+| **`.txt` que o app não enxerga** | **14 dos 47 `.txt` da pasta (30%)**, incluindo a transcrição limpa de 16:52 — § 4.14 |
 | **E4 (guard do AEC)** | **existe pela metade** — a rede de segurança de `cancel_echo` (`reco.py:1068-1073`) compara RMS **global** e nunca disparou nos casos ruins (§ 4.10) |
 | **C0 (`test_alinhamento.py` vermelho)** | confirmado e commitado (`efc23b8`); segue vermelho, segue bloqueando a Fase C |
 | Push | ⚠️ **sem push desde `e74944b`** — tudo de 30/08 (`de198f2` em diante: as três auditorias e a Fase 0) está só no local. Depende de autorização do Gabriel; conferir com `git log --oneline origin/master..HEAD` |
 | Documentação | 2 entradas novas em `docs/ARMADILHAS.md` (acoplamento não prediz o AEC; relatório de amostra vazia) |
-| 10:41 e 11:16 | ainda não transcritos (se forem, tem de ser do `_alinhado.mp3`) |
+| 10:41 e 11:16 | ainda não transcritos; **o "de qual arquivo" já está decidido** (§ 6.6): o `_alinhado.mp3`. O que sobra para o Gabriel é só *se* quer transcrevê-los |
 
 **Acervo:** `Documents\Reco` tem **59 MP3**, dos quais 6 são `_alinhado` — **53
 gravações originais**. ~~e nunca se mediu quantas têm salto~~ **Medido em 30/08:
@@ -451,6 +461,24 @@ correlação não ajuda mas o relógio de B2 ainda funciona **parcialmente** (§
 
 Saiu da própria execução de 21/08, não do desenho. Independente de A–D.
 
+- [ ] **E0. Aplicar a decisão de § 6.3 no disco — nas DUAS pontas.** Zero código,
+  duas renomeações, ambas reversíveis. Em `%USERPROFILE%\Documents\Reco`:
+  1. `gravacao_reco_2026-08-21_16-52-20.txt` →
+     `gravacao_reco_2026-08-21_16-52-20.txt.desalinhado` (tira a contaminada da
+     busca por conteúdo e de "Abrir transcrição" — § 6.3);
+  2. `gravacao_reco_2026-08-21_16-52-20_alinhado.mp3.txt` →
+     `gravacao_reco_2026-08-21_16-52-20_alinhado.txt` (**põe a limpa na busca** —
+     sem isso a reunião fica com **zero** transcrição visível, § 4.15).
+  ⚠️ **Renomear arquivo a arquivo, nomeando cada um.** Nunca laço sobre a pasta:
+  são dados do Gabriel, e as outras 13 invisíveis não fazem parte deste passo
+  (quem as conserta é E3a, sem tocar no disco).
+  ⚠️ **Efeito colateral aceito:** `tools/transcrever.py` pula `.txt` existente
+  procurando `<arquivo>.txt`, então depois de (2) ele deixa de ver a transcrição
+  do alinhado e a refaria. Custa uma transcrição desnecessária num arquivo que
+  ninguém roda por ali; não vale um passo para consertar (§ 5).
+  *Prova:* `ls "$USERPROFILE/Documents/Reco" | grep 16-52-20` mostrando exatamente
+  `…16-52-20.mp3`, `…16-52-20.txt.desalinhado`, `…16-52-20_alinhado.mp3` e
+  `…16-52-20_alinhado.txt` — e mais nenhum `.txt` de 16:52.
 - [ ] **E1. `alinhar_gravacao.py --aplicar` deve recusar quando não dá para
   alinhar.** No arquivo `gravacao_reco_2026-08-21_15-00-51.mp3` só 21/78 trechos
   correlacionavam; `escreve_trecho` herdou `ultimo_d` nos 57 trechos mudos e
@@ -477,13 +505,62 @@ Saiu da própria execução de 21/08, não do desenho. Independente de A–D.
   copiá-las). Já registrado em `docs/ARMADILHAS.md`.
   *Prova:* medir original e `_alinhado` de 10:41 nas mesmas janelas, e o ERLE não
   cair.
-- [ ] **E3. A biblioteca não sabe que existe versão alinhada.** A view
-  "Gravações…" lista `x.mp3` e `x_alinhado.mp3` como dois itens sem relação, e
-  nada impede transcrever o desalinhado por engano — que é exatamente o defeito
-  que gerou a transcrição contaminada de 16:52. Mínimo: marcar visualmente o par e
-  transcrever o alinhado por padrão quando ele existir.
-  *Prova:* com o par no disco, a ação "transcrever" no item original abrir o
-  `_alinhado.mp3`; com só o original, comportamento inalterado.
+- [ ] **E3a. A biblioteca lê UMA convenção de `.txt` e o disco tem DUAS.**
+  ⚠️ Achado da 4ª passada, verificado no código e no disco (§ 4.14): **14 dos 47
+  `.txt` da pasta são invisíveis** para a view "Gravações…" — sem ✓, fora da busca
+  por conteúdo, sem "Abrir transcrição" e sem ✦ resumo. Entre eles, a transcrição
+  limpa de 16:52. **Mudança exata**, em `reco.py`:
+  - função nova de **nível de módulo** (ao lado de `_excluir_gravacao`, não dentro
+    da classe `App` — é o que a torna testável sem Tk):
+
+    ```python
+    def _txt_de(p: Path) -> Path | None:
+        """Transcrição de `p` nas duas convenções que existem no disco:
+        `x.txt` (o app, `_autosave_txt`) e `x.mp3.txt` (`tools/transcrever.py`)."""
+        for c in (p.with_suffix(".txt"), p.with_name(p.name + ".txt")):
+            if c.exists():
+                return c
+        return None
+    ```
+
+  - trocar por ela os **5 pontos de LEITURA** — `_lib_sync_actions`,
+    `_lib_scan_thread` (a chave `"txt"` da linha), `_lib_txt_content`,
+    `_lib_open_txt` e `_lib_resumo` (só o `txt`, **não** o `resumo`);
+  - **não** tocar em `_autosave_txt` nem no ramo `--transcribe` do `__main__`:
+    escrita continua numa convenção só. Ler as duas, escrever uma.
+  ⚠️ **Precedência é `x.txt` primeiro**, e ela precisa ser determinística mesmo
+  não colidindo hoje (conferido em 30/08: nenhum áudio da pasta tem os dois).
+  ⚠️ **Âncora por símbolo, não por linha** — `reco.py` está sujo com o modo nota
+  (§ 0). `grep -n 'with_suffix(\"\.txt\")' reco.py` dá os 7 pontos: os 5 de leitura
+  mudam, `_autosave_txt` e o `--transcribe` ficam.
+  *Prova:* `python tools/test_biblioteca_txt.py` (**novo**, sem Tk e sem áudio):
+  cria um tmpdir com as 4 formas de par que existem hoje no acervo e confere
+  `_txt_de` em cada uma — (i) só `x.txt`; (ii) só `x.mp3.txt`; (iii) os dois
+  (vence `x.txt`); (iv) nenhum (devolve `None`).
+- [ ] **E3b. A biblioteca não sabe que `x_alinhado.mp3` é par de `x.mp3`.** A view
+  lista os dois como itens sem relação, e nada impede transcrever o desalinhado
+  por engano — o defeito exato que gerou a transcrição contaminada de 16:52, e o
+  que faz o renomeio de E0 ser paliativo com prazo (§ 4.15). **Mudança exata:**
+  - `_lib_scan_thread`: por linha, resolver `alinhado = p.with_name(p.stem +
+    "_alinhado" + p.suffix)` e guardar `r["alinhado"]` quando existir (é a
+    convenção que `tools/alinhar_gravacao.py` escreve — `path.stem + "_alinhado"`);
+  - a linha do **original com par** resolve `.txt`, busca por conteúdo e "Abrir
+    transcrição" **pelo alinhado primeiro**, caindo no próprio se ele não tiver;
+  - `_lib_transcribe` numa linha com par transcreve `r["alinhado"]` e salva com
+    `_autosave_txt(r["alinhado"], text)` → `x_alinhado.txt`, com o status dizendo
+    **qual arquivo** foi usado (senão a correção é silenciosa e o operador não
+    aprende). É isto que impede a recontaminação de `x.txt`;
+  - marca visual no nome da linha do original (badge/sufixo no valor da coluna
+    `nome`, que já é texto puro).
+  ⚠️ **Não esconder o `x_alinhado.mp3` da lista.** Some a possibilidade de
+  reproduzi-lo e de comparar os dois — é informação a menos por estética.
+  *Prova (o comportamento, não a UI):* com o par no disco, a ação "transcrever" na
+  linha do original chamar o transcritor com o caminho do `_alinhado.mp3` e gravar
+  `_alinhado.txt`; buscar por uma palavra que só existe no texto do alinhado e a
+  **linha do original** aparecer. Sem par, comportamento idêntico ao de hoje.
+  ⚠️ Tk não se automatiza aqui (é a mesma razão da pendência 4 do hub do projeto):
+  a parte automatizável é `_txt_de` + a resolução do par, que E3a já cobre por
+  teste; o resto é conferência visual do Gabriel, declarada.
 - [ ] **E4a. Confirmar por medição que o guard atual nunca dispara.** ⚠️ **O
   guard de E4 JÁ EXISTE** (`reco.py:1068-1073`, "Safety net") e o md mandava
   criá-lo — o furo está em § 4.10. A evidência de que ele não pega já está na mão
@@ -538,6 +615,13 @@ porque hoje a ferramenta de conserto **pode piorar o arquivo em silêncio**.
 que já nasceram com salto** e nunca vão se curar. Mas a expectativa muda: § 8.5
 mostra que o ERLE ruim **acompanha o salto**, então E4 não conserta o AEC —
 **impede que ele piore o áudio** enquanto A/B/C consertam a causa.
+
+⚠️ **Ajuste da 4ª passada (30/08): dentro da Fase E, a ordem é E0 → E3a → E3b →
+E1/E1b → E4a/E4b.** E0 é o passo do card `c2c45518347d4`, custa duas renomeações e
+fecha o caso de 16:52 hoje. E3a vem logo atrás porque é **pré-requisito de
+sentido** de E0: é ela que faz a transcrição limpa existir para o app (§ 4.14).
+E3b fecha o buraco que faz E0 ser paliativo (§ 4.15). E1/E1b e E4 seguem valendo
+pelo motivo já escrito — nenhuma delas depende destas três.
 
 ---
 
@@ -716,6 +800,56 @@ Conceito do acervo: **ancoragem-e-confirmação** — a medição confirmou a hi
 preferida (guard interno) e a investigação parou ali. É a segunda vez neste md que
 esse padrão aparece (a primeira está em § 4.4).
 
+### 4.14 Furo: existem DUAS convenções de nome de `.txt`, e a biblioteca só lê uma
+
+Achado da 4ª passada, verificado nos dois lados. Quem escreve transcrição são dois
+caminhos, com regras diferentes:
+
+| escritor | regra | exemplo |
+| --- | --- | --- |
+| `reco.py` `_autosave_txt` (o app) | `audio.with_suffix(".txt")` | `x.mp3` → `x.txt` |
+| `tools/transcrever.py` (linha 28) | `src.with_suffix(src.suffix + ".txt")` | `x.mp3` → `x.mp3.txt` |
+
+Quem **lê** é só a biblioteca, e ela usa `p.with_suffix(".txt")` nos cinco pontos
+(`_lib_sync_actions`, `_lib_scan_thread`, `_lib_txt_content`, `_lib_open_txt`,
+`_lib_resumo`). Logo, todo `.mp3.txt` é invisível: sem ✓ na coluna 📄, fora da
+busca por conteúdo, sem "Abrir transcrição", sem ✦ resumo.
+
+**Contado no disco em 30/08: 14 dos 47 `.txt` da pasta (30%) são invisíveis** —
+13 `.mp3.txt` + 1 `.m4a.txt`. Nenhum áudio tem as duas formas ao mesmo tempo, então
+a precedência ainda não é observável na prática (mas tem de ser determinística no
+código — E3a).
+
+⚠️ **O `CLAUDE.md` do projeto documenta as duas regras, em seções diferentes** —
+"busca por nome E por conteúdo dos `.txt`" na seção da biblioteca, e "gera
+`<arquivo>.txt` ao lado" na tabela de `tools/`. Cada uma está certa sozinha;
+ninguém leu as duas juntas. Conceito do acervo: **decompor-e-recompor** — o
+"filesystem é o banco" é montado por dois escritores com regras distintas e lido
+por um leitor que presume equivalência.
+
+### 4.15 Viés: a decisão de § 6.3 conferiu a metade que confirmava
+
+§ 6.3 decidiu renomear a transcrição contaminada de 16:52 e escreveu que assim
+*"a busca por conteúdo da biblioteca varre `.txt` e não pegaria mais o arquivo
+contaminado"*. **Isso é verdade e foi reverificado.** O que não foi conferido é a
+outra metade: se a transcrição **boa** aparece. Ela não aparece — é
+`…_alinhado.mp3.txt`, uma das 14 de § 4.14.
+
+Efeito líquido da decisão como está: depois do renomeio, a reunião de 16:52 fica
+com **zero** transcrição visível no app. E a linha do original passa a exibir ⚡
+habilitado sem ✓, então **um clique regrava `…16-52-20.txt` a partir do MP3
+desalinhado** — a mesma contaminação, no mesmo caminho.
+
+Duas consequências, ambas já aplicadas: o renomeio ganha a segunda ponta (**E0**,
+passo 2) e E3b deixa de ser "o conserto de verdade, depois" para ser o que impede
+a decisão de se desfazer sozinha.
+
+Conceito do acervo: **ancoragem-e-confirmação** de novo — a medição confirmou o
+que se esperava e a conferência parou ali. **Terceira ocorrência neste md**
+(§ 4.4, § 4.13, esta). Não é azar: é o padrão de falha desta investigação, e vale
+tratá-lo como tal — toda decisão daqui deve declarar o que conferiu **e** o que
+não conferiu.
+
 ---
 
 ## 5. Descartado e impraticável
@@ -754,13 +888,31 @@ esse padrão aparece (a primeira está em § 4.4).
   (3ª passada). A busca satura nos arquivos com salto (§ 4.12), mas alargá-la não
   conserta nada: com um degrau no meio do arquivo **não existe offset único
   correto**, e uma busca mais larga só aumenta a chance de pico falso. O conserto
-  é não nascer com salto (A/B/C) e, para o acervo, o `_alinhado.mp3` (E3).
+  é não nascer com salto (A/B/C) e, para o acervo, o `_alinhado.mp3` (E3b).
 - **Um guard novo ao lado do que já existe em `cancel_echo`** (3ª passada). A
   tentação depois de § 4.10 é escrever um segundo mecanismo; o certo é **corrigir
   a régua do que existe** (E4b) e manter a rede global como segunda camada. Menos
   código, não mais — **via-negativa**.
 - **Desligar o AEC por opção de config.** Já descartado em § 6.2: obrigaria o
   usuário a adivinhar, arquivo a arquivo, o que o código sabe medir.
+- **Migrar as 14 transcrições `.mp3.txt` para a convenção do app** (4ª passada).
+  Renomear 14 arquivos do Gabriel para consertar um leitor é caro, irreversível na
+  prática (ninguém desfaz depois) e **quebra o "pula `.txt` existente" do
+  `tools/transcrever.py`** em 14 arquivos em vez de um. E3a resolve os 14 com uma
+  função de 5 linhas e nenhum toque no disco — **via-negativa**: menos mecanismo,
+  não mais. As duas renomeações de E0 são exceção justificada: lá o objetivo *é*
+  mudar o que o app mostra num caso específico.
+- **Unificar as duas convenções mudando `tools/transcrever.py`** (4ª passada).
+  Tentador ("uma regra só"), mas orfana os 14 arquivos que já existem, quebra o
+  contrato documentado dele em `C:\Dev\CLAUDE.md` § Áudio/vídeo e não conserta
+  nada que E3a não conserte. **Ler as duas, escrever uma** é a regra.
+- **Esconder o `x_alinhado.mp3` da lista da biblioteca** (4ª passada). Deixaria o
+  par "limpo" na tela, mas some com a possibilidade de reproduzir o alinhado e de
+  comparar os dois — informação a menos por estética. E3b marca o par, não o some.
+- **Guardar em algum lugar qual `.txt` é o bom** (metadado, sidecar, SQLite).
+  Contradiz a decisão de projeto de 12/08 (o filesystem é o banco, sem SQLite) e
+  cria um segundo lugar que pode divergir do disco. A relação `x` ↔ `x_alinhado`
+  já está **no nome do arquivo** — E3b só precisa lê-la.
 
 ---
 
@@ -836,7 +988,7 @@ fração encolhe junto com A/B/C; o que não encolhe é o acervo já gravado.
 **Decisão: renomear a contaminada, não apagar.**
 `gravacao_reco_2026-08-21_16-52-20.txt` →
 `gravacao_reco_2026-08-21_16-52-20.txt.desalinhado`, e a limpa
-(`..._alinhado.mp3.txt`) fica como a boa. Mais a Fase E3, que é o conserto de
+(`..._alinhado.mp3.txt`) fica como a boa. Mais a Fase E3b, que é o conserto de
 verdade.
 
 **Motivo:** a recomendação anterior era apagar. Renomear resolve o mesmo risco —
@@ -847,6 +999,20 @@ reunião de trabalho real. O sufixo diz o porquê. É reversível; apagar não �
 **O que reverteria:** o Gabriel preferir o disco limpo — é arquivo dele, um
 `del` resolve depois. A ordem (renomear agora, apagar se ele quiser) não tem
 custo.
+
+⚠️ **Corrigida na 4ª passada (30/08, card `c2c45518347d4`). A decisão fica; ela é
+que estava pela metade.** Renomear a contaminada tira a errada da busca — isso foi
+reverificado e é verdade. **Mas não põe a certa no lugar:** a limpa é
+`…_alinhado.mp3.txt`, invisível para o app (§ 4.14), então o efeito líquido seria
+a reunião ficar sem transcrição nenhuma na biblioteca (§ 4.15). Duas emendas:
+
+- o renomeio passa a ter **duas pontas** — a contaminada sai, a limpa entra
+  (`…_alinhado.mp3.txt` → `…_alinhado.txt`). Virou o passo **E0**;
+- **E3b deixa de ser opcional.** Sem ele, a linha do original fica sem ✓ com o ⚡
+  habilitado, e um clique regrava `…16-52-20.txt` do MP3 desalinhado. O renomeio
+  sozinho é decisão com validade até o próximo clique.
+
+A **regra geral** que o card pedia junto com este caso está em § 6.6.
 
 ### 6.4 A sessão de 21/08 deveria ter alinhado os arquivos por conta própria?
 
@@ -879,8 +1045,45 @@ do `medir_aec.py`, e o custo sobe.
 
 **Consequência de escopo, também decidida:** a expectativa de E4 baixa. Com § 8.5
 na mesa, ERLE ruim é **acompanhante do salto**; E4 impede o AEC de piorar o áudio,
-mas quem conserta o AEC é A/B/C (gravação nova) e E3 + `alinhar_gravacao.py`
+mas quem conserta o AEC é A/B/C (gravação nova) e E3b + `alinhar_gravacao.py`
 (acervo). Vender E4 como "conserto do eco" seria repetir a ancoragem de § 4.13.
+
+### 6.6 A regra: o que acontece com a transcrição velha quando o áudio é corrigido (card `c2c45518347d4`)
+
+**Decisão: resolução por preferência, nunca por destruição. O código não apaga
+texto.** É a regra geral que o card pedia — § 6.3 decidia só o caso de 16:52.
+
+1. Corrigir áudio **nunca sobrescreve áudio**: `alinhar_gravacao.py` escreve
+   `x_alinhado.mp3` ao lado e o original fica intacto. Já é assim; passa a ser
+   regra escrita.
+2. Existindo o par, **o alinhado é a fonte canônica** do texto: é dele que a
+   biblioteca transcreve, é o `.txt` dele que ela mostra e é nele que a busca por
+   conteúdo entra (E3b).
+3. O texto do original **não é apagado nem sobrescrito pelo app** — ele apenas
+   deixa de ser o que a biblioteca mostra. Sumir da busca é consequência de (2),
+   não de um `del`.
+4. **Limpar disco é do Gabriel, manual.** Apagar o `.txt` velho ou o MP3 original
+   continua sendo escolha dele; nenhum passo deste md o faz.
+5. Enquanto E3b não existir, o mecanismo é o sufixo `.desalinhado` de § 6.3 —
+   **paliativo com prazo**, não a regra.
+
+**Motivo:** a casa já tem uma política de sobrevivência do texto, e ela está no
+código: `_lib_delete` manda **só o áudio** para a Lixeira e preserva o
+`.txt`/`.resumo.md` — *"o transcript sobrevive ao MP3"*. Uma regra que apagasse
+texto ao corrigir áudio contradiria isso. A regra acima é a mesma política levada
+ao caso novo: o texto sobrevive, mas para de ser o que se lê por padrão.
+
+**O que reverteria:** aparecer um caso em que o alinhado é **pior** que o original
+(o `_alinhado.mp3` de 15:00 foi exatamente isso — residual +318,5 ms, medido e
+apagado). Aí "o alinhado é canônico" fica falso e a preferência tem de olhar a
+medição, não a existência do arquivo. **É por isso que E1 (recusar `--aplicar`
+quando não dá para alinhar) é pré-requisito de confiança de (2)** — sem ela, um
+`_alinhado.mp3` ruim promove-se sozinho a fonte canônica.
+
+**O que esta regra NÃO precisa:** guarda nova contra sobrescrita silenciosa de
+`.txt`. Como a correção sempre nasce em **caminho novo**, o único caso em que o app
+regrava um `.txt` por cima é retranscrever o **mesmo** áudio — onde sobrescrever é
+o comportamento certo. Registrado para ninguém propor a maquinaria depois.
 
 ---
 
@@ -892,8 +1095,16 @@ mas quem conserta o AEC é A/B/C (gravação nova) e E3 + `alinhar_gravacao.py`
 - **Alinhar o acervo em massa depois da Fase 0.1?** Só faz sentido decidir com a
   tabela na mão — se forem 2 arquivos, é trivial; se forem 30, são ~500 MB
   duplicados. Fica em aberto **até** a Fase 0.1 rodar.
-- **Transcrever 10:41 e 11:16?** Nunca foram transcritos. Se forem, tem de ser a
-  partir do `_alinhado.mp3` — e depois de E3 isso passa a ser automático.
+- **Transcrever 10:41 e 11:16?** Nunca foram transcritos, e os dois já têm
+  `_alinhado.mp3` no disco. **O "de qual arquivo" não é mais pergunta** — § 6.6
+  decidiu (o alinhado), e depois de E3b passa a ser automático. O que sobra para
+  ele é só **se quer gastar iGPU nisso**: são gravações dele, ~4,5 min e ~2 min.
+  ⚠️ Se transcrever, vale saber que 10:41 e 11:16 são justamente os dois em que a
+  busca de atraso do `cancel_echo` **satura** (§ 4.12) — o texto sai melhor que o
+  do original, mas não impecável.
+- **Apagar de vez a transcrição contaminada de 16:52?** E0 renomeia (reversível,
+  decisão do fable em § 6.3). Apagar o `.txt.desalinhado` continua sendo escolha
+  dele, a qualquer momento, sem custo nenhum de ordem.
 - **Push do que foi feito em 30/08** (de `de198f2` em diante: as três passadas de
   auditoria e a Fase 0 — `git log --oneline origin/master..HEAD`). Regra da casa:
   push só com autorização, a cada vez. Nenhum deles toca `reco.py`.
@@ -1067,6 +1278,22 @@ própria escolha — foi o que já fez 10:41 "piorar" de +5,6 para +0,5 dB (§ 4
 > Fase 0.4 confirmou a hipótese preferida e parou um `join` antes da resposta —
 > § 4.13) e **via-negativa** (corrigir a régua do guard que existe, em vez de
 > escrever um segundo — § 5).
+
+> **Auditado em 2026-08-30, 4ª passada** (fable, card `c2c45518347d4` — "duas
+> transcrições da mesma reunião no disco, qual fica?"). Escopo: **eixo E /
+> biblioteca**; A–D não reabertas (foram reverificadas nas passadas 2 e 3). O que
+> mudou: § 4.14 (as duas convenções de `.txt` e as 14 transcrições invisíveis —
+> contado no disco e lido nos 5 pontos de leitura de `reco.py`); § 4.15 (§ 6.3
+> conferiu só a metade que confirmava); **E0** novo (renomeio nas duas pontas,
+> zero código); **E3 partido em E3a+E3b** com a mudança exata e prova sem Tk;
+> § 5 com 4 descartes novos; § 6.3 corrigida; **§ 6.6 decide a regra geral** que o
+> card pedia; § 7 podada (o "de qual arquivo" deixou de ser pergunta). Conceitos
+> do acervo aplicados: **decompor-e-recompor** (o "filesystem é o banco" é escrito
+> por dois caminhos com regras diferentes e lido por um que presume equivalência —
+> § 4.14), **ancoragem-e-confirmação** (3ª ocorrência neste md: a decisão conferiu
+> que a errada sumia e não conferiu que a certa aparecia — § 4.15) e
+> **via-negativa** (uma função de leitura resolve as 14, contra migrar 14 arquivos
+> do Gabriel — § 5).
 
 ## Linhagem
 
