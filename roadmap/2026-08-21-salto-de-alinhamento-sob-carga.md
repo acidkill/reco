@@ -324,6 +324,33 @@ Barata, sem risco, e é ela que decide o tamanho do resto. **Nada aqui altera
 Vale mesmo que A e B falhem, e é a rede para gravação **sem eco** (fone), onde a
 correlação não ajuda mas o relógio de B2 ainda funciona **parcialmente** (§ 1.6).
 
+- [ ] **C0. ⚠️ PRÉ-REQUISITO, descoberto em 30/08: `tools/test_alinhamento.py`
+  está VERMELHO hoje, e nunca passou.** O caso 8 ("gravação longa simulada:
+  jitter de atraso corrigido na reestimativa") deixa **+352 amostras (22 ms) de
+  residual** na janela de transição (t=30 s), contra um gate de 160 amostras —
+  `residual por janela: 0s=+0, 10s=+0, 20s=+0, 30s=+352, 40s=+0`. Verificado com
+  `git worktree` em três pontos: no `HEAD`, no `HEAD` sem o trabalho não
+  commitado de outras sessões, e **no próprio commit que criou o teste**
+  (`4714ee0`, Fase 1 de 19/08). É determinístico (as seeds do gerador sintético
+  são fixas). Ou seja: **nasceu vermelho e ninguém viu** — apesar de o
+  `CLAUDE.md` mandar rodá-lo "sempre que mexer em `estimar_offset`/`_al_*`/
+  `_pump`" e de o roadmap de 19/08 o listar como prova da Fase 1.
+  **Por que bloqueia C:** a prova de C1+C2 é *"`test_alinhamento.py` com três
+  casos novos"*. Com a base vermelha, o executor não consegue distinguir "meus
+  três casos passam" de "o teste continua falhando pelo mesmo motivo de sempre" —
+  que é exatamente o "C acertou × C teve sorte" que a decisão de § 6.1 quis
+  evitar ao pôr B1/B3 na frente.
+  **O que fazer antes de tocar em C1:** decidir se os 22 ms residuais na janela
+  de transição são (a) defeito real do `_al_corrigir_deriva` — plausível, é o
+  mesmo fenômeno de recuperação lenta que C existe para consertar — ou (b) gate
+  apertado demais para uma janela que contém a própria transição. Se for (a), C1
+  provavelmente já o corrige e o teste vira prova de C. **Não** relaxar o gate
+  sem responder isso: seria apagar o sinal em vez do defeito.
+  *Prova:* `python tools/test_alinhamento.py` com `0 FALHA(S)` **antes** de
+  começar C1, e a razão do 352 escrita aqui.
+  ⚠️ Menor, mas conserta junto: a linha de falha imprime `(pior: -1)` enquanto o
+  valor que reprovou é `+352` — o resumo do teste não reporta o número que ele
+  usou para decidir. Mesma família de § 4.5/4.6.
 - [ ] **C1. Duas leituras concordantes = salto, aplica inteiro — com as duas
   guardas que faltavam.** Em `_al_corrigir_deriva`, guardar a última estimativa;
   se duas consecutivas concordarem (mesmo sinal, diferença < 20 ms) com
