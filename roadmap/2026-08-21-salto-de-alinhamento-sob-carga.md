@@ -14,26 +14,47 @@ de correção.
 > **reverificada na máquina** e se confirma. O desenho tinha **três furos** e a
 > operação de 21/08 tinha **cinco vieses de medição** — tudo em § 4. Fases
 > renumeradas, provas reescritas, decisões técnicas tomadas em § 6.
+>
+> **3ª passada em 2026-08-30** (fable, card `c931ed05c701f`, o do guard do AEC).
+> Quatro achados novos, todos em § 4.10–4.13: **o guard que E4 mandava criar já
+> existe no código** e o critério dele é o errado (§ 4.10); o `medir_aec.py` mede
+> o AEC num regime que o app **não usa** (§ 4.11); a busca de atraso do
+> `cancel_echo` está a 3 ms de saturar nos arquivos medidos (§ 4.12); e o ERLE
+> negativo **anda junto com o salto** — cruzamento em § 8.5 (§ 4.13). E4 reescrito,
+> § 6.2 corrigida, decisão nova em § 6.5.
 
 ---
 
 ## 0. Estado da execução (30/08/2026)
 
-**Nenhuma linha de `reco.py` mudou.** Conferido hoje: `CHUNK = 1024`
-(`reco.py:1360`), `blocksize=CHUNK` nos dois recorders (`reco.py:1676` e
-`:1700`), `ALIGN_MAX_AJUSTE = 2400` (`:1396`), sem `CAP_BUFFER_S`, sem contador
-de glitch, sem `AvSetMmThreadCharacteristicsW`, sem
+**Nenhuma linha de `reco.py` mudou por causa deste roadmap.** Conferido hoje:
+`CHUNK = 1024` (`reco.py:1360`), `blocksize=CHUNK` nos dois recorders
+(`reco.py:1676` e `:1700`), `ALIGN_MAX_AJUSTE = 2400` (`:1396`), sem
+`CAP_BUFFER_S`, sem contador de glitch, sem `AvSetMmThreadCharacteristicsW`, sem
 `tools/test_gravacao_sob_carga.py`. **O defeito segue ativo**: toda gravação
 feita com o PC pesado nasce com risco de salto.
 
-| item | estado em 30/08 (2ª passada, fim do dia) |
+⚠️ **`reco.py` NÃO está limpo, e isso é pré-requisito operacional de A1/A1b/B1/
+B3/E4** (3ª passada, 30/08): `git status` mostra `M reco.py` com **+132 linhas de
+outra frente** — o *modo nota* (`roadmap/2026-08-13-melhoria-modo-nota-speech-to-ia.md`,
+também modificado). Antes de tocar em `reco.py`, conferir de quem é o trabalho:
+**não reverter, não commitar por cima**, sequenciar ou usar worktree
+(`cerebro/scripts/worktree.ps1`).
+
+⚠️ **Os números de linha acima são do working tree sujo**, não do `HEAD` — os
+hunks do modo nota deslocam tudo em ~10 linhas. **Ancorar por símbolo**
+(`grep -n "^CHUNK\|blocksize=CHUNK\|def _rec_mic"`), nunca pelo número.
+
+| item | estado em 30/08 (3ª passada, fim do dia) |
 | --- | --- |
-| **Fase 0** | **0.1, 0.2 e 0.4 EXECUTADAS** — resultados em § 8. 0.3 depende de B1 |
-| Fases A–E deste md | nenhuma executada (nenhuma linha de `reco.py` mudou) |
+| **Fase 0** | **0.1, 0.2, 0.4 e 0.5 EXECUTADAS** — resultados em § 8. 0.3 depende de B1; 0.6 é nova e está aberta |
+| Fases A–E deste md | nenhuma executada (nenhuma linha de `reco.py` mudou por este md) |
 | E1 (`--aplicar` recusar) | não existe; não há `--forcar` em `tools/alinhar_gravacao.py` |
 | E2 (`medir_aec.py` com janelas fixas) | não existe; `escolhe_janelas` ainda escolhe por energia |
 | E3 (biblioteca conhecer o par `_alinhado`) | não existe |
-| Push dos commits `691fdae`/`f5ec0a7` | **feito** (`origin/master` == `HEAD`, push de 28/08) |
+| **E4 (guard do AEC)** | **existe pela metade** — a rede de segurança de `cancel_echo` (`reco.py:1068-1073`) compara RMS **global** e nunca disparou nos casos ruins (§ 4.10) |
+| **C0 (`test_alinhamento.py` vermelho)** | confirmado e commitado (`efc23b8`); segue vermelho, segue bloqueando a Fase C |
+| Push | ⚠️ **sem push desde `e74944b`** — tudo de 30/08 (`de198f2` em diante: as três auditorias e a Fase 0) está só no local. Depende de autorização do Gabriel; conferir com `git log --oneline origin/master..HEAD` |
 | Documentação | 2 entradas novas em `docs/ARMADILHAS.md` (acoplamento não prediz o AEC; relatório de amostra vazia) |
 | 10:41 e 11:16 | ainda não transcritos (se forem, tem de ser do `_alinhado.mp3`) |
 
@@ -245,6 +266,30 @@ Barata, sem risco, e é ela que decide o tamanho do resto. **Nada aqui altera
   fraco. Qualquer corte por acoplamento erra numa das pontas. Consequência
   direta em § 6.2 — o guard tem de medir o ganho no próprio sinal, e agora isso
   está provado, não só preferido.
+- [x] **0.5. Cruzar o veredito de salto (0.1) com o ERLE (0.4).** ✅ **FEITA em
+  30/08 (3ª passada)** — resultado em § 8.5. Custo zero: os dois JSON já estavam
+  em `temp/`, faltava o `join`. **Os 2 arquivos com ERLE ≤ 0 são os 2 com salto**,
+  e o ERLE mediano cai de **+11,6 dB (sem salto) para +5,6 dB (com salto)**.
+  *Prova:* tabela de 13 linhas em § 8.5, reproduzida no md para sobreviver ao
+  `temp/` (não versionado).
+- [ ] **0.6. Medir o AEC no regime que o app realmente usa.** Hoje toda medida de
+  ERLE deste projeto sai de **janela contígua de 15 s** (`medir_aec.py`), mas o
+  pipeline chama `cancel_echo` sobre uma **colcha de retalhos**: as partes livres
+  de dominância de um grupo VAD, concatenadas (`reco.py:2190-2192`), ~3 s de fala
+  por chamada. São regimes diferentes (§ 4.11) — e é no segundo que o guard de E4
+  vai operar.
+  *Prova:* script novo somente-leitura `tools/medir_aec_regime.py` que, num MP3,
+  reconstrói os grupos VAD do jeito do app (`segmentar_por_vad` →
+  `agrupar_segmentos` → `dominancia_sistema` → `partes_livres`), chama
+  `cancel_echo` em cada grupo e reporta, por chamada: duração, nº de retalhos, e
+  a razão de energia saída/entrada. Sai o % de chamadas em que o AEC **soma**
+  energia. Rodar em 15:00 (o pior), 16:52 (o melhor) e 05/08 11:01.
+- [ ] **0.7. Fechar a causalidade de § 8.5 — depende de E2.** Existem no disco os
+  `_alinhado.mp3` de 18/08 15:16, 21/08 10:41, 11:16 e 16:52. Medir o par
+  (original × alinhado) responde se o ERLE ruim é **causado** pelo salto ou só
+  anda junto com ele. ⚠️ **Só faz sentido depois de E2** (janelas fixas): sem isso
+  a medida compara trechos diferentes e mede a própria escolha de janela (§ 4.5).
+  *Prova:* tabela de 4 linhas com ERLE antes × depois **nas mesmas janelas**.
 
 ### Fase A — não perder amostra (prevenção)
 
@@ -439,16 +484,60 @@ Saiu da própria execução de 21/08, não do desenho. Independente de A–D.
   transcrever o alinhado por padrão quando ele existir.
   *Prova:* com o par no disco, a ação "transcrever" no item original abrir o
   `_alinhado.mp3`; com só o original, comportamento inalterado.
-- [ ] **E4. Guard do AEC quando não há eco** (decidido em § 6.2 — era pendência do
-  Gabriel). Em `cancel_echo`, medir o ganho no próprio sinal e **devolver o mic
-  cru** quando o resultado piora, em vez de aplicar um filtro que soma energia.
-  Limiar vem da Fase 0.4.
-  *Prova:* `tools/medir_aec.py` no arquivo de 15:00 com ERLE ≥ 0 dB (hoje: −7,8 dB)
-  e sem regressão nos três arquivos de ERLE alto (11:16, 16:52, 10:41).
+- [ ] **E4a. Confirmar por medição que o guard atual nunca dispara.** ⚠️ **O
+  guard de E4 JÁ EXISTE** (`reco.py:1068-1073`, "Safety net") e o md mandava
+  criá-lo — o furo está em § 4.10. A evidência de que ele não pega já está na mão
+  (as 6 janelas de 15:00 dão ERLE de −17,4 a −3,9 dB, e **nenhuma dá 0,0**, que é
+  a assinatura do fallback), mas isso é inferência. Confirmar direto, sem tocar
+  em `reco.py`: `cancel_echo` devolve `mic[:n0]` **idêntico** quando dispara,
+  então `np.array_equal(cancel_echo(mic, ref), mic[:len(mic)])` responde por si.
+  *Prova:* script somente-leitura sobre as 6 janelas de 15:00 imprimindo
+  `disparou=False` em todas, mais a razão `r_out/r_in` global de cada uma (a
+  expectativa: todas abaixo de 1,05, o que explica o silêncio do guard).
+- [ ] **E4b. Mover o critério do guard de global para POR BLOCO.** O defeito do
+  guard de hoje não é existir, é a **régua**: ele compara o RMS da chamada
+  inteira, enquanto o dano é local (os blocos em que só o eco toca). Voz do
+  usuário e silêncio diluem o aumento e a razão global fica abaixo de 1,05.
+  **Mudança exata**, no laço de blocos de `cancel_echo` (`for t0 in range(0, nt,
+  passo)`, ~2 s por bloco), depois de calcular `y`:
+  - comparar a energia do resíduo com a da entrada **do mesmo bloco** —
+    `np.sum(np.abs(Mb - y) ** 2)` contra `np.sum(np.abs(Mb) ** 2)`;
+  - se o resíduo for **maior**, o filtro daquele bloco é lixo: `Yh[:, t0:t1] = 0`
+    e `E[:, t0:t1] = Mb` (equivale a `h = 0` naquele bloco).
+  Três coisas que o executor precisa saber, e que já foram conferidas no código:
+  - **a pós-supressão se neutraliza sozinha** — com `Yh = 0` no bloco, `pe = 0` e
+    o ganho `max(beta, 1 − pe/(pr+pe))` vira 1,0. Não há passo extra a escrever;
+  - **a razão é válida no domínio da STFT** mesmo sem Parseval exato: numerador e
+    denominador saem da mesma janela, mesmo overlap, mesmo suporte;
+  - **não relaxar a margem**: usar `> 1.0` (qualquer aumento). Desligar um filtro
+    que estava neutro custa zero; é o mesmo argumento de "no pior caso não
+    dispara" de § 6.2.
+  ⚠️ **Manter a rede global de 1,05** — as duas cobrem coisas diferentes (bloco ×
+  chamada). Tirar a de fora não é simplificação, é perder a cobertura de erro
+  numérico do `istft`.
+  ⚠️ **Descontinuidade entre blocos não é objeção nova:** o filtro `h` já é
+  reestimado inteiro a cada 2 s, então a fronteira já existe hoje.
+  *Prova (o número, não o exit code):* `python tools/medir_aec.py
+  "%USERPROFILE%\Documents\Reco\gravacao_reco_2026-08-21_15-00-51.mp3"` com ERLE
+  mediano ≥ 0 dB (hoje −7,8) e **nenhuma janela negativa** (hoje as 6 são).
+  ⚠️ O script **sai com código 1** mesmo assim — o gate embutido dele exige ERLE
+  ≥ +5 dB, que não é o critério deste passo. Ler o número impresso.
+  *Prova de não-regressão:* `python tools/varrer_aec.py <os 13 caminhos>
+  --saida temp/<data>-aec-pos-E4` e comparar com a tabela de § 8.5 — nenhum
+  `erle_mediano` caindo mais de 0,5 dB, nenhum `dano_pior` acima de 2,0 dB.
+  ⚠️ **Passar a lista explícita, nunca `--acervo 13`**: essa flag pega os 13
+  **maiores por tamanho** da pasta, então uma gravação nova troca a amostra e a
+  comparação deixa de ser antes×depois (é o mesmo defeito de § 4.5).
 
 **Ordem decidida (§ 6.1):** 0 → A1+A1b → B1+B3 → C1+C2 → B2 → D → E. A Fase E é
 independente e pode entrar em qualquer ponto; E1/E1b são as mais urgentes dela,
 porque hoje a ferramenta de conserto **pode piorar o arquivo em silêncio**.
+
+⚠️ **Ajuste da 3ª passada (30/08):** E4a+E4b entram junto com E1/E1b — são baratas
+(uma comparação por bloco), não podem piorar, e cobrem os **16 arquivos do acervo
+que já nasceram com salto** e nunca vão se curar. Mas a expectativa muda: § 8.5
+mostra que o ERLE ruim **acompanha o salto**, então E4 não conserta o AEC —
+**impede que ele piore o áudio** enquanto A/B/C consertam a causa.
 
 ---
 
@@ -551,6 +640,82 @@ Registrado porque o roadmap deve proteger o que funciona:
 - Os originais nunca foram sobrescritos.
 - A documentação fechou completa no mesmo dia (2 armadilhas + hub + diário + § 9).
 
+### 4.10 Furo: o guard que E4 mandava criar já existe — e o critério dele é o errado
+
+`cancel_echo` termina assim desde 29/07 (`reco.py:1068-1073`), e o
+`docs/ARMADILHAS.md` § NLMS até manda **manter** essa rede:
+
+```python
+r_in  = float(np.sqrt(np.mean(mic[:n0] ** 2))) if n0 else 0.0
+r_out = float(np.sqrt(np.mean(out ** 2))) if out.size else 0.0
+if r_out > r_in * 1.05:
+    return mic[:n0].astype(np.float32)
+```
+
+Três passadas de auditoria escreveram E4 como "criar um guard" sem abrir essa
+função. **O que falta não é o mecanismo, é a régua:** ele compara o RMS da
+**chamada inteira**, e o dano é **local** — o ERLE mede só os blocos em que só o
+far-end toca. Voz do usuário e silêncio diluem o aumento, a razão global fica
+abaixo de 1,05 e o fallback não dispara.
+
+Evidência de que ele nunca disparou em 15:00: as 6 janelas dão ERLE **−17,4 /
+−3,9 / −10,0 / −11,8 / −4,1 / −5,6 dB**. Se o guard tivesse pegado alguma, a
+saída daquela janela seria o próprio mic e o ERLE sairia **0,0 exato**. Nenhum
+zero. Vira E4a (confirmar) + E4b (corrigir a régua).
+
+### 4.11 Viés: o `medir_aec.py` mede o AEC num regime que o app não usa
+
+Todo número de ERLE deste projeto — inclusive os **+15,5 dB** que o `CLAUDE.md`
+publica — sai de **janela contígua de 15 s**. O pipeline real chama `cancel_echo`
+sobre outra coisa (`reco.py:2190-2192`):
+
+```python
+window = np.concatenate([audio[s:t] for s, t in partes])
+window = cancel_echo(window, np.concatenate([ref[s:t] for s, t in partes]))
+```
+
+`partes` são os sub-trechos de um grupo VAD **livres de dominância**, concatenados
+— tipicamente ~3 s de fala (`ALVO_ACUMULO_S`), em vários retalhos. Três
+consequências, todas de desenho:
+
+- o eco chega ao mic ~200 ms **depois** da referência; recortar só a fala e colar
+  os pedaços **descarta justamente o rabo do eco** de cada retalho;
+- `_alinhar_canais` aplica **um `np.roll` global** na colcha: perto de uma emenda,
+  a referência deslocada vem de outro instante do arquivo;
+- com ~3 s de janela e `bloco_s = 2.0`, sobra **1 bloco e meio** por chamada —
+  metade da amostra que o instrumento usa.
+
+Conceito do acervo: **decompor-e-recompor** (parcelas de janelas diferentes
+recompostas presumindo equivalência). Vira a Fase 0.6. Enquanto ela não rodar,
+**"+15,5 dB de ERLE" descreve o laboratório, não o produto.**
+
+### 4.12 Viés: a busca de atraso do `cancel_echo` está a 3 ms de saturar
+
+`_alinhar_canais` procura o offset em **±0,5 s** (`maxlag_s=0.5`, subido de 0,2
+em 19/08 exatamente porque saturava). A varredura da Fase 0.1 mediu, nos mesmos
+arquivos: pior janela **+496,9 ms** em 11:16 e **−482,9 ms** em 10:41, com
+amplitude de **566 ms**. Ou seja, o valor de hoje já não cobre o pior caso do
+acervo.
+
+O `medir_aec.py` sabe reportar isso (coluna `<- busca saturada`, gate 0), mas o
+`varrer_aec.py` da Fase 0.4 **nunca chama** `atraso_alinhamento` — então a
+varredura do acervo mediu ERLE sem saber quais janelas saturaram. Não vira passo
+de conserto (subir `maxlag_s` não resolve salto: um offset único não serve para
+os dois lados de um degrau — ver § 5), vira **ressalva**: onde há salto, o ERLE
+medido é **piso**, e parte do "AEC ruim" é alinhamento saturado.
+
+### 4.13 Viés: a Fase 0.4 parou um `join` antes da resposta
+
+0.1 e 0.4 rodaram no mesmo dia, sobre o mesmo acervo, e ninguém cruzou as duas
+tabelas. A conclusão publicada ("não existe limiar de acoplamento") está certa,
+mas era **meia resposta**: o cruzamento (§ 8.5, feito na 3ª passada a custo zero)
+mostra que **os 2 arquivos com ERLE ≤ 0 são os 2 com salto**, e que o ERLE mediano
+cai de +11,6 para +5,6 dB na presença de salto.
+
+Conceito do acervo: **ancoragem-e-confirmação** — a medição confirmou a hipótese
+preferida (guard interno) e a investigação parou ali. É a segunda vez neste md que
+esse padrão aparece (a primeira está em § 4.4).
+
 ---
 
 ## 5. Descartado e impraticável
@@ -585,6 +750,17 @@ Registrado porque o roadmap deve proteger o que funciona:
   do espaço em disco é do Gabriel (§ 7).
 - **A2 antes de A1.** Prioridade de thread não compra GIL; entra só se D1 mostrar
   glitch remanescente depois de A1 (§ Fase A).
+- **Subir `maxlag_s` do `cancel_echo` acima de 0,5 s para cobrir o salto**
+  (3ª passada). A busca satura nos arquivos com salto (§ 4.12), mas alargá-la não
+  conserta nada: com um degrau no meio do arquivo **não existe offset único
+  correto**, e uma busca mais larga só aumenta a chance de pico falso. O conserto
+  é não nascer com salto (A/B/C) e, para o acervo, o `_alinhado.mp3` (E3).
+- **Um guard novo ao lado do que já existe em `cancel_echo`** (3ª passada). A
+  tentação depois de § 4.10 é escrever um segundo mecanismo; o certo é **corrigir
+  a régua do que existe** (E4b) e manter a rede global como segunda camada. Menos
+  código, não mais — **via-negativa**.
+- **Desligar o AEC por opção de config.** Já descartado em § 6.2: obrigaria o
+  usuário a adivinhar, arquivo a arquivo, o que o código sabe medir.
 
 ---
 
@@ -646,8 +822,14 @@ em −30 dB deixaria passar o de 05/08. **Não há limiar de acoplamento que
 funcione** — o guard tem de medir o ganho no próprio sinal, exatamente como
 E4 já estava desenhado. O que era a via preferida virou a única via.
 
-Corolário que muda o tamanho de E4: **2 dos 13 arquivos (15%) têm ERLE ≤ 0** —
-o caso de 15:00 não é exceção exótica, é uma fração do uso normal.
+~~Corolário que muda o tamanho de E4: **2 dos 13 arquivos (15%) têm ERLE ≤ 0** —
+o caso de 15:00 não é exceção exótica, é uma fração do uso normal.~~
+
+⚠️ **Corrigido na 3ª passada (30/08, card `c931ed05c701f`).** Os 15% continuam
+medidos, mas a leitura estava errada: **os 2 arquivos com ERLE ≤ 0 são exatamente
+2 dos 7 com salto**, e nenhum dos 6 sem salto tem ERLE ≤ 0 (§ 8.5). Não é "uma
+fração do uso normal" — é **sintoma do mesmo defeito-mãe deste roadmap**. A
+fração encolhe junto com A/B/C; o que não encolhe é o acervo já gravado.
 
 ### 6.3 As duas transcrições de 16:52 (card `c2c45518347d4`)
 
@@ -678,6 +860,28 @@ custo.
 - **Sempre medir o resultado antes de entregar.** Foi o que salvou o caso de
   15:00 — e agora vira guarda no código (E1), não disciplina do operador.
 
+### 6.5 E4 é conserto de régua, não guard novo (card `c931ed05c701f`)
+
+**Decisão: E4 vira E4a (medir) + E4b (mover o critério do guard existente de
+global para por bloco), e a rede global de 1,05 permanece.** O que era "criar um
+guard" é, na verdade, **corrigir o critério de um guard que já está no código
+desde 29/07** (§ 4.10).
+
+**Motivo:** o mecanismo existe e o `ARMADILHAS.md` manda mantê-lo; o que falha é
+a régua — RMS da chamada inteira contra um dano que é local aos blocos de eco. A
+correção cabe em ~4 linhas dentro do laço que já estima o filtro, não pode piorar
+(no pior caso não dispara) e não adiciona superfície nova.
+
+**O que reverteria:** a Fase 0.6 mostrar que, no regime real (colcha de retalhos,
+~3 s por chamada, § 4.11), a comparação por bloco de 2 s quase nunca tem material
+suficiente — aí o critério passa a ser por **chamada**, com a rotulagem far-end
+do `medir_aec.py`, e o custo sobe.
+
+**Consequência de escopo, também decidida:** a expectativa de E4 baixa. Com § 8.5
+na mesa, ERLE ruim é **acompanhante do salto**; E4 impede o AEC de piorar o áudio,
+mas quem conserta o AEC é A/B/C (gravação nova) e E3 + `alinhar_gravacao.py`
+(acervo). Vender E4 como "conserto do eco" seria repetir a ancoragem de § 4.13.
+
 ---
 
 ## 7. Pendente — decisão do Gabriel
@@ -690,6 +894,9 @@ custo.
   duplicados. Fica em aberto **até** a Fase 0.1 rodar.
 - **Transcrever 10:41 e 11:16?** Nunca foram transcritos. Se forem, tem de ser a
   partir do `_alinhado.mp3` — e depois de E3 isso passa a ser automático.
+- **Push do que foi feito em 30/08** (de `de198f2` em diante: as três passadas de
+  auditoria e a Fase 0 — `git log --oneline origin/master..HEAD`). Regra da casa:
+  push só com autorização, a cada vez. Nenhum deles toca `reco.py`.
 
 Fora do escopo deste md, ainda abertos de antes (roadmap de 19/08): Fase 2 (AEC
 adaptativo), Fase 3 (consertar `tools/medir_eco.py`), Fase 4 (fone/operação),
@@ -697,7 +904,7 @@ teste de estresse de 20 min do modo ao vivo.
 
 ---
 
-## 8. Fase 0 EXECUTADA (30/08/2026, card `s2bb49459`) — resultados
+## 8. Fase 0 EXECUTADA (30/08/2026, cards `s2bb49459` e `c931ed05c701f`) — resultados
 
 Três dos quatro passos rodaram (0.3 depende do contador de B1 e continua aberta).
 Nenhuma linha de `reco.py` mudou. Ferramentas novas, todas somente-leitura:
@@ -787,10 +994,53 @@ não abrupta, então não explica salto de centenas de ms.
 | § 1.6 é co-causa? | +4,1 ms/min, 12× abaixo da correção atual | **B2 fica onde está** |
 | qual o limiar de acoplamento de E4? | **não existe** — as populações se sobrepõem | E4 mede o ganho no sinal |
 | o AEC piorando é exceção? | 2 de 13 (15%) | E4 sobe de prioridade |
+| **o ERLE ruim é defeito à parte?** (3ª passada) | **não — os 2 casos são 2 dos 7 com salto** (§ 8.5) | E4 vira rede de segurança, não conserto |
+| **o guard de E4 existe?** (3ª passada) | **existe, com a régua errada** (`reco.py:1068-1073`) | E4 vira E4a+E4b (§ 4.10) |
 
 **Não medido ainda:** 0.3 (efeito do modo ao vivo na taxa de glitch) — depende do
 contador de B1, executa junto com D1. E a Fase 0.2 só rodou com a caixa **muda**;
 a corrida com áudio tocando fica para D1, que já grava com áudio.
+
+### 8.5 — 0.5: o ERLE ruim anda com o salto (3ª passada, 30/08)
+
+Cruzamento dos dois JSON da Fase 0 (`2026-08-30-aec-acervo.json` ×
+`2026-08-30-varredura-acervo.json`), custo zero. **Esta tabela é também o
+baseline de não-regressão de E4b** — está reproduzida aqui porque `temp/` não é
+versionado.
+
+| gravação | ERLE med. | acopl. | dano | pior janela | amplitude | veredito 0.1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 21/08 15:00:51 | **−7,8** | −36,1 | 0,2 | 427,9 ms | 487,9 ms | **salto** |
+| 05/08 11:01:01 | **−0,5** | −14,4 | 0,2 | 160,8 ms | 231,1 ms | **salto** |
+| 21/08 11:16:59 | +5,6 | −12,7 | 0,3 | 496,9 ms | 496,9 ms | **salto** |
+| 21/08 10:41:06 | +5,6 | −9,3 | 0,0 | −482,9 ms | 566,0 ms | **salto** |
+| 27/07 10:14:24 | +7,6 | −13,1 | 0,3 | 38,0 ms | 0,1 ms | ok |
+| 18/08 15:16:55 | +9,0 | −10,8 | 1,2 | −399,1 ms | 452,5 ms | **salto** |
+| 14/08 09:04:17 | +10,0 | −6,6 | 0,5 | 319,4 ms | 325,0 ms | **salto** |
+| 10/08 12:28:55 | +10,3 | −10,9 | 1,5 | 47,0 ms | 28,1 ms | ok |
+| 21/08 14:16:55 | +11,5 | −11,9 | 1,7 | −46,1 ms | 69,7 ms | ok |
+| 21/07 16:15:40 | +11,6 | −12,1 | 0,7 | 74,3 ms | 25,2 ms | desalinhado |
+| 20/08 09:33:58 | +12,9 | −12,4 | 0,7 | −45,8 ms | 46,0 ms | ok |
+| 22/06 10:50:22 | +15,7 | −24,1 | 0,1 | 34,1 ms | 57,4 ms | ok |
+| 21/08 16:52:20 | +16,2 | −17,8 | 0,1 | −359,0 ms | 359,1 ms | **salto** |
+
+- **Os 2 arquivos com ERLE ≤ 0 são 2 dos 7 com salto.** Nenhum dos 6 sem salto
+  tem ERLE ≤ 0.
+- **ERLE mediano: +5,6 dB com salto × +11,6 dB sem salto.**
+- Mecanismo que explica: `_alinhar_canais` acha **um** offset para a chamada
+  inteira; com um degrau no meio, metade do material fica com a referência no
+  lugar errado e o filtro ajusta ruído — que é como o mínimos quadrados **soma**
+  energia. Em 11:16 e 10:41 a busca ainda **satura** (§ 4.12).
+
+⚠️ **O que isto NÃO prova.** n=13, e o acoplamento confunde (15:00 tem −36,1 dB,
+quase não há eco a cancelar). É associação com mecanismo, não causalidade medida.
+
+**Teste discriminante, barato e disponível:** existem no disco os `_alinhado.mp3`
+de **18/08 15:16, 21/08 10:41, 11:16 e 16:52** — quatro dos sete com salto. Rodar
+`tools/varrer_aec.py` no par (original × `_alinhado`) responde direto: se o ERLE
+sobe no alinhado, a associação é causal. ⚠️ **Depende de E2** (janelas fixas):
+sem isso a comparação escolhe trechos diferentes nos dois arquivos e mede a
+própria escolha — foi o que já fez 10:41 "piorar" de +5,6 para +0,5 dB (§ 4.5).
 
 ---
 
@@ -805,6 +1055,18 @@ a corrida com áudio tocando fica para D1, que já grava com áudio.
 > **ancoragem-e-confirmação** (a sessão de 21/08 achou uma causa boa e parou de
 > procurar outras; daí § 1.6) e **falácia-da-previsão** (C1 previa o
 > comportamento da correlação sem medir; daí as duas guardas).
+
+> **Auditado em 2026-08-30, 3ª passada** (fable, card `c931ed05c701f` — "o
+> `cancel_echo` deve se desligar quando não há eco?"). O que mudou: § 0 (o
+> `reco.py` está sujo com o modo nota; 4 commits sem push; âncoras de linha são
+> do working tree); Fase 0.5 executada (§ 8.5) e 0.6/0.7 novas; **E4 partido em
+> E4a+E4b** com a mudança exata dentro do laço de blocos; § 4.10–4.13 (4 achados);
+> § 5 com 3 descartes novos; § 6.2 corrigida e § 6.5 decidida. Conceitos do
+> acervo aplicados: **decompor-e-recompor** (o instrumento mede janela contígua,
+> o app roda sobre colcha de retalhos — § 4.11), **ancoragem-e-confirmação** (a
+> Fase 0.4 confirmou a hipótese preferida e parou um `join` antes da resposta —
+> § 4.13) e **via-negativa** (corrigir a régua do guard que existe, em vez de
+> escrever um segundo — § 5).
 
 ## Linhagem
 

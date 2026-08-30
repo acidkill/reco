@@ -183,6 +183,13 @@ Medições e alternativas descartadas:
   controle negativo) e o teto out-of-sample (~2,5 dB: o mic do Intel Smart Sound
   aplica AGC própria e o caminho de eco muda com o conteúdo). A deriva de clock
   (−65,8 ppm em 23/07, +21 ppm em 19/08) é um dos tetos, não o único.
+  ⚠️ **Duas ressalvas medidas em 30/08/2026** (detalhe em `docs/ARMADILHAS.md` e
+  [roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md](roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md)
+  § 4.10–4.13): (1) os números acima são de **janela contígua**, e o pipeline roda
+  o AEC sobre partes de grupo VAD **concatenadas** — regime diferente, ainda não
+  medido; (2) a rede de segurança do `cancel_echo` compara **RMS global** e por
+  isso não pega o caso em que o filtro soma energia (ERLE ≤ 0 em 2 de 13
+  gravações, ambas com salto de alinhamento).
 
 ## Ferramentas de apoio (`tools/`)
 

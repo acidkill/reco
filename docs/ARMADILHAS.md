@@ -622,3 +622,42 @@ outro ramo e diz "amostra vazia, nada se conclui". É a mesma família de defeit
 de `medir_aec.py` escolher as janelas sozinho e de `alinhar_gravacao.py` relatar
 `medidos` e escrever `usados` — o instrumento descrevendo algo diferente do que
 fez.
+
+## A rede de segurança do `cancel_echo` mede o RMS global e nunca dispara (30/08/2026)
+
+**Sintoma.** O `cancel_echo` tem, desde 29/07, um fallback que devolve o mic cru
+"se a saída sair mais alta que a entrada" (`reco.py`, fim de `cancel_echo`) — e
+esta armadilha até manda mantê-lo (§ NLMS acima). Mesmo assim, no arquivo de
+21/08 15:00 o AEC entrega **ERLE de −17,4 a −3,9 dB nas 6 janelas medidas**: ele
+soma energia e o fallback não reage.
+
+**Causa.** A régua é **global** (`r_out > r_in * 1.05` sobre a chamada inteira) e
+o dano é **local** — o ERLE mede só os blocos em que apenas o far-end toca. Voz
+do usuário e silêncio diluem o aumento, e a razão global fica abaixo de 1,05.
+Assinatura para conferir: quando o fallback dispara, a saída é o próprio mic e o
+ERLE daquela janela sai **0,0 exato**; em 15:00 não há nenhum zero.
+
+**O que fazer.** Não escrever um segundo guard: **corrigir a régua do que existe**
+— comparar a energia do resíduo com a da entrada **por bloco de estimativa**
+(o laço `for t0 in range(0, nt, passo)`) e zerar o filtro no bloco em que ele
+piora. Passo `E4b` em
+[roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md](../roadmap/2026-08-21-salto-de-alinhamento-sob-carga.md)
+§ 4.10. E lembrar do contexto de § 8.5: **os arquivos com ERLE ≤ 0 são os que têm
+salto de alinhamento** — o guard evita o dano, não conserta o eco.
+
+## O ERLE publicado do `cancel_echo` mede um regime que o app não usa (30/08/2026)
+
+**Sintoma.** Todo número de AEC deste projeto (inclusive o "+15,5 dB" do
+`CLAUDE.md`) sai de `tools/medir_aec.py`, que mede em **janela contígua de 15 s**.
+
+**Causa.** O pipeline real chama `cancel_echo` sobre outra coisa: as partes de um
+grupo VAD livres de dominância, **concatenadas** (`_transcribe_channel`, o
+`np.concatenate([audio[s:t] for s, t in partes])`) — ~3 s de fala em vários
+retalhos. O eco chega ao mic ~200 ms depois da referência, então recortar só a
+fala descarta o rabo do eco de cada retalho; e o `np.roll` global de
+`_alinhar_canais` cruza as emendas, trazendo referência de outro instante.
+
+**O que fazer.** Tratar os números de ERLE como **do laboratório**, não do
+produto, até a Fase 0.6 do roadmap de 21/08 medir no regime real
+(`tools/medir_aec_regime.py`). Vale para qualquer gate de AEC daqui: medir onde
+o código roda, não onde é conveniente medir.
