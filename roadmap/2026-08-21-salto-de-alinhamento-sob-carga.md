@@ -625,3 +625,14 @@ teste de estresse de 20 min do modo ao vivo.
 > **ancoragem-e-confirmação** (a sessão de 21/08 achou uma causa boa e parou de
 > procurar outras; daí § 1.6) e **falácia-da-previsão** (C1 previa o
 > comportamento da correlação sem medir; daí as duas guardas).
+
+## Linhagem
+
+> Escrita pelo maestro ao fim de cada rodada (`registrar_linhagem`). É o
+> registro de QUEM fez o quê neste roadmap: o arquiteto que o desenhou, os
+> executores que o cumpriram, custo e commit de cada passo. Serve à revisão
+> do fable — ele lê o desenho E a execução, não só o resultado.
+
+| quando | card | papel | modelo | custo | sinal | commit |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-08-30 03:50 | `c688f37215cbd` | arquiteto | opus | US$ 8.56 | feito | `eafe14b` |
