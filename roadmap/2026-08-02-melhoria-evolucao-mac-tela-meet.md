@@ -253,3 +253,5 @@ Opcional, só depois da Fase 1 validada e SE a qualidade MLX incomodar.
 > distribuir o Reco a terceiros, este roadmap deve ser re-melhorado — as
 > decisões "extensão sem servidor" e "sem assinatura de app" partem do uso
 > pessoal.
+
+> Auditado em 2026-09-01 (overhaul): VIVO — Fase 0 executada 07/08 (reco.py:538-558 darwin); F3 (extensão Meet) nunca iniciada; F1/F2/F4 congeladas sem Mac (card c931a399e754f)

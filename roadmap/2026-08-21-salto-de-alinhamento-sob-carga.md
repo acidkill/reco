@@ -1307,3 +1307,5 @@ própria escolha — foi o que já fez 10:41 "piorar" de +5,6 para +0,5 dB (§ 4
 | 2026-08-30 03:50 | `c688f37215cbd` | arquiteto | opus | US$ 8.56 | feito | `eafe14b` |
 | 2026-08-30 05:29 | `c931ed05c701f` | arquiteto | opus | US$ 7.14 | feito | `502dce6` |
 | 2026-08-30 05:57 | `c2c45518347d4` | arquiteto | opus | US$ 6.67 | feito | `ba54094` |
+
+> Auditado em 2026-09-01 (overhaul): VIVO — Fase 0 executada 30/08 (b219572); Fases A–E abertas, E0 não feita, test_alinhamento.py vermelho; pré-requisito: commitar o modo nota que suja reco.py; card i6a78b398d1fc (Fase 0) defasado

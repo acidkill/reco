@@ -558,3 +558,5 @@ com confiança). Para confirmar o custo dos Studio Effects, rodar
 `tools/bench_final.py` com `BENCH_DEVICES=NPU` **durante** uma chamada com câmera
 e efeitos ligados, comparando com § 1.3 do roadmap irmão. **Não bloqueia nada** —
 Dec1 já evita a NPU por dois outros motivos.
+
+> Auditado em 2026-09-01 (overhaul): FECHADO — Fases 1–2 executadas 29/07, Fase 3 implementada; resta só o teste de estresse manual 3.6 (gabriel)

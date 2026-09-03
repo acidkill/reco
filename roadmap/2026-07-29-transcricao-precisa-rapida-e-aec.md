@@ -488,3 +488,5 @@ dominância (só 3,7% do canal era "só sistema"), o que escondeu os dois bugs.
 `CLAUDE.md` do projeto: **toda mudança em `reco.py` exige recompilar** com
 `powershell -ExecutionPolicy Bypass -File "C:\Dev\Reco\build.ps1"`. O executável é
 frozen; sem rebuild a mudança não chega ao app que o Gabriel usa.
+
+> Auditado em 2026-09-01 (overhaul): FECHADO — Fases 1, 2, 4.1 executadas 29/07; Fase 3 e 4.2 saíram pelo md de VAD/diarização; iGPU×NPU virou card c6754eb610d70

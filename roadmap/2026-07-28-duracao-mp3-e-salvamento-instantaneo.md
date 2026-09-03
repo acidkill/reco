@@ -135,3 +135,5 @@ significa alguma coisa (ABR real).
   depois.
 - **O arquivo passa a existir durante a gravação.** Se o app morrer no meio, resta
   um MP3 parcial válido em vez de nada.
+
+> Auditado em 2026-09-01 (overhaul): FECHADO — MP3Writer/_open_mp3 em produção (CLAUDE.md § MP3 por container); § EXECUTADO conferido 21/08

@@ -353,3 +353,5 @@ Rodar os comandos com o Python do venv do projeto (`C:\Dev\Reco`).
 - Achados "(lido)" não foram reproduzidos em runtime (`ancoragem-e-
   confirmacao`): se uma prova de fase contradisser o diagnóstico, vale a
   prova — corrigir o md, não forçar o passo.
+
+> Auditado em 2026-09-01 (overhaul): FECHADO — 5 commits de 12/08 (hub); mutex em reco.py:5049, tools/check_i18n.py existe

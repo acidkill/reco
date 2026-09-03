@@ -98,3 +98,5 @@ estilos `D.Treeview*` removidos na Fase 5 voltam, agora com consumidor real.
 - Recompilação exige `Reco.exe` fechado (pendência conhecida).
 
 > Executado na mesma sessão (12/08/2026) — ver marcações `[x]` e o diário.
+
+> Auditado em 2026-09-01 (overhaul): FECHADO — view Gravações e resumo via claude -p em reco.py (l.1266); build de 12/08

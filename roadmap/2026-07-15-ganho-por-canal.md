@@ -88,3 +88,5 @@ curva do slider mudou; não é motivo para reabrir o roadmap.
 - Consolidado datado ao fim — sem registro localizável de diário de 15/07/2026
   para este item específico; não bloqueante (o recurso está em produção e
   documentado).
+
+> Auditado em 2026-09-01 (overhaul): FECHADO — § EXECUTADO conferido 21/08 (commit 393b89c); helpers de ganho no CLAUDE.md do Reco

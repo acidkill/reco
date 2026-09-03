@@ -577,3 +577,5 @@ AEC zera o mic. Ou seja: com os canais 359 ms fora, o `cancel_echo` não cancela
 cancelar, e o AEC ligado por config soma energia em vez de tirar. Alinhar não muda
 isso (a mediana já era +4 ms). Fica como pergunta aberta: **vale um guard que
 desliga o `cancel_echo` quando o acoplamento medido é desprezível?**
+
+> Auditado em 2026-09-01 (overhaul): VIVO — Fases 0–1 executadas (0b3da6e, 4714ee0); Fases 2, 3, 4 abertas; § 7 reclassificado para fable (ordem, acervo em massa, reter 10 s)

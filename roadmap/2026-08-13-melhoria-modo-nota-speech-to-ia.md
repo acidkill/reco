@@ -292,3 +292,5 @@ esta seção).
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-08-21 23:29 | `6d5bebccb1cd` | executor | sonnet | US$ 2.50 | esperando | `f5ec0a7` |
 | 2026-08-30 20:09 | `6d5bebccb1cd` | executor | sonnet | US$ 0.52 | esperando | `894840f` |
+
+> Auditado em 2026-09-01 (overhaul): VIVO (em risco) — Fase 1 executada 21/08 mas NUNCA commitada: git log -S nota_dir vazio, reco.py +126/−6 só no working tree; Fases 2–3 abertas; card 6d5bebccb1cd defasado

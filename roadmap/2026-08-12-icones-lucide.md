@@ -271,3 +271,5 @@ Mesmo pipeline das 13 primeiras — sem passo novo de arquitetura:
 Build revalidado (`build.ps1` verde, 15 PNGs no bundle), `check_i18n.py`
 verde, App real com os 2 ícones novos carregados em `_icon_cache` sem
 exceção. Doc atualizada em `CLAUDE.md` § "Ícones Lucide".
+
+> Auditado em 2026-09-01 (overhaul): FECHADO — commits 1a6cc9e e 27dae58 (13/08); pendência x vs trash-2 é reversível, sugerido fable manter x
