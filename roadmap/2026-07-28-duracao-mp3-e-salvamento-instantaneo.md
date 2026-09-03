@@ -105,7 +105,9 @@ significa alguma coisa (ABR real).
    `reco.py:1707` `def _encode_loop`; `CLAUDE.md` § encode em streaming documenta
    `stop()` em "~450 ms, contra ~11 s para 20 min de gravação antes" — dentro do
    critério de < 0,5 s.
-3. [ ] **Fallback sem `av`**: mantém o caminho em memória, mas com `write_mp3(vbr=False)`
+3. [x] **Fallback sem `av`** — **DESCARTADO** (ver a nota abaixo; marcado em
+   03/09/2026 para o passo parar de contar como trabalho aberto): mantém o
+   caminho em memória, mas com `write_mp3(vbr=False)`
    (CBR). Sem Xing, só o CBR dá duração exata — é a correção de uma linha para um
    caminho que praticamente nunca roda (o exe traz `av`).
    ⚠️ **Não implementado — descartado na prática, não corrigido.** Grep por
@@ -137,3 +139,4 @@ significa alguma coisa (ABR real).
   um MP3 parcial válido em vez de nada.
 
 > Auditado em 2026-09-01 (overhaul): FECHADO — MP3Writer/_open_mp3 em produção (CLAUDE.md § MP3 por container); § EXECUTADO conferido 21/08
+> Auditado em 2026-09-03 (revisão geral): o único `[ ]` que restava era o passo 3, **descartado na prática** desde 28/07 (`av` virou dependência dura) — marcado como descartado, sem mudança de código; o md deixa de aparecer como Ativo no índice.

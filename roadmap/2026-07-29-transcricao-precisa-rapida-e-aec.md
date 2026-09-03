@@ -332,6 +332,14 @@ AEC a 7 dB não chega lá.
   limpo. A dominância de canal é o que de fato conserta "atribuir ao Gabriel a
   fala do interlocutor"; o AEC sozinho não chega lá (§ 1.5).
 
+> Auditado em 2026-09-03 (revisão geral): esta seção está **desatualizada** e
+> contradiz o § 8 deste mesmo arquivo — a Fase 3 (VAD) e a Fase 4 item 2
+> (dominância de canal, `k_db=15`) foram entregues em
+> [2026-07-29-melhoria-transcricao-ao-vivo-vad-diarizacao.md](2026-07-29-melhoria-transcricao-ao-vivo-vad-diarizacao.md)
+> (§§ 8 e 8.1). Segue pendente só o item 3 (export de MP3 limpo). As duas
+> decisões do § 7 também já foram respondidas lá (Dec1 iGPU, Dec2 rascunho +
+> passada final).
+
 ---
 
 ## 7. Transcrição ao vivo — medido, e o resultado inverte a intuição

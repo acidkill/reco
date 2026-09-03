@@ -1309,3 +1309,4 @@ própria escolha — foi o que já fez 10:41 "piorar" de +5,6 para +0,5 dB (§ 4
 | 2026-08-30 05:57 | `c2c45518347d4` | arquiteto | opus | US$ 6.67 | feito | `ba54094` |
 
 > Auditado em 2026-09-01 (overhaul): VIVO — Fase 0 executada 30/08 (b219572); Fases A–E abertas, E0 não feita, test_alinhamento.py vermelho; pré-requisito: commitar o modo nota que suja reco.py; card i6a78b398d1fc (Fase 0) defasado
+> Auditado em 2026-09-03 (revisão geral): segue VIVO; duas linhas do § 0 envelheceram — a de **Push** ("sem push desde `e74944b`") não vale mais: os commits de 30/08 estão em `origin/master` e hoje só a marca de auditoria de 03/09 (`b7cfd93`) está à frente. O **pré-requisito continua de pé**: `reco.py` ainda está sujo com o modo nota (não commitado). Fase 0 segue 4/7 (0.3, 0.6 e 0.7 abertos).

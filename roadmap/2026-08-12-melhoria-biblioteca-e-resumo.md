@@ -100,3 +100,4 @@ estilos `D.Treeview*` removidos na Fase 5 voltam, agora com consumidor real.
 > Executado na mesma sessão (12/08/2026) — ver marcações `[x]` e o diário.
 
 > Auditado em 2026-09-01 (overhaul): FECHADO — view Gravações e resumo via claude -p em reco.py (l.1266); build de 12/08
+> Auditado em 2026-09-03 (revisão geral): fechado, mas o passivo que esta entrega criou vive noutro md — a biblioteca lê só `x.txt` e o `tools/transcrever.py` escreve `x.mp3.txt` (14 dos 47 `.txt` invisíveis): conserto no passo **E3a** de [2026-08-21-salto-de-alinhamento-sob-carga.md](2026-08-21-salto-de-alinhamento-sob-carga.md) § 4.14.

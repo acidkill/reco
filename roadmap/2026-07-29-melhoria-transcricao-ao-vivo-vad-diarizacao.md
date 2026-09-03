@@ -560,3 +560,4 @@ e efeitos ligados, comparando com § 1.3 do roadmap irmão. **Não bloqueia nada
 Dec1 já evita a NPU por dois outros motivos.
 
 > Auditado em 2026-09-01 (overhaul): FECHADO — Fases 1–2 executadas 29/07, Fase 3 implementada; resta só o teste de estresse manual 3.6 (gabriel)
+> Auditado em 2026-09-03 (revisão geral): corrigindo a marca acima — **VIVO, 1 gate humano**: o passo 3.6 (20 min reais com `live` ligado) é declarado **bloqueante** pelo próprio md, que diz que o modo ao vivo "não deve ser considerado confiavelmente pronto pra uso diário" sem ele; rodado só o proxy de 170 s. Fase 3 = 7/8. Dono do gate: gabriel.

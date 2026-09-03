@@ -579,3 +579,4 @@ isso (a mediana já era +4 ms). Fica como pergunta aberta: **vale um guard que
 desliga o `cancel_echo` quando o acoplamento medido é desprezível?**
 
 > Auditado em 2026-09-01 (overhaul): VIVO — Fases 0–1 executadas (0b3da6e, 4714ee0); Fases 2, 3, 4 abertas; § 7 reclassificado para fable (ordem, acervo em massa, reter 10 s)
+> Auditado em 2026-09-03 (revisão geral): ⚠️ o `roadmap/README.md` classifica este md como **Fechado**, e está errado — as Fases 2, 3 e 4 estão abertas, só que escritas em **prosa sem checkbox**, e o gerador de índice só enxerga `[ ]`. Ordem recomendada no § 7: **F3 → F2 → F4**; dono das 4 pendências do § 7: **fable**. A pergunta aberta do § 9 (guard que desliga o `cancel_echo` com acoplamento desprezível) já foi respondida no **E4b** de [2026-08-21-salto-de-alinhamento-sob-carga.md](2026-08-21-salto-de-alinhamento-sob-carga.md).
