@@ -10,3 +10,24 @@ repos:
     hooks:
       - id: check-added-large-files
       - id: check-yaml
+
+  # Teto de tamanho do CLAUDE.md (12/09/2026, overhaul do harness, eixo H.6 —
+  # roadmap/2026-09-01-harness-claude-md-hooks-skills-armadilhas.md, Fase 6):
+  # CLAUDE.md é mapa, não depósito — regra em 1–3 linhas + link, e o porquê mora
+  # em docs/ ou no cérebro. O gate da raiz só enxerga o CLAUDE.md da raiz, então
+  # cada repo cobra o seu chamando o mesmo script (dono único da lógica; o teto
+  # vive aqui). Estourou → mova texto para docs/; subir o teto é decisão
+  # registrada na "Cronologia dos tetos" de
+  # cerebro/temas/harness/claude-md-e-documentacao.md, nunca ajuste silencioso.
+  # ⚠️ Caminho ABSOLUTO de propósito: com `../cerebro/...` o hook morre dentro de
+  # um worktree (`.claude/worktrees/<id>` sobe para `<repo>/.claude/`), e a regra
+  # da casa manda usar worktree justamente em repo com gate. Em clone fora de
+  # C:/Dev o script não existe: remova este bloco (nenhum CI depende dele).
+  - repo: local
+    hooks:
+      - id: gate-claude-md
+        name: teto de tamanho do CLAUDE.md (6 KB)
+        entry: python C:/Dev/cerebro/scripts/gate_claude_md.py --arquivo CLAUDE.md --teto 6144
+        language: system
+        files: '^CLAUDE\.md$'
+        pass_filenames: false

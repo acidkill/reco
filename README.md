@@ -217,5 +217,8 @@ sem download, e usa o `small` no lugar.
   enquanto a iGPU disputa com o desenho da tela.
 - O modelo é baixado uma vez (ou embutido no `.exe`) e fica em cache local.
 
+Scripts de apoio em `tools/` (rodam pelo fonte, não entram no executável): ver
+[docs/TOOLS.md](docs/TOOLS.md).
+
 ### Licença
 [MIT](LICENSE) © 2026 Gabriel dos Anjos
