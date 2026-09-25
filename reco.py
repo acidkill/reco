@@ -102,7 +102,7 @@ def default_output_dir() -> Path:
 CONFIG_PATH = Path.home() / ".reco_config.json"
 
 _CFG_DEFAULTS: dict = {
-    "language":    None,      # "pt" | "en" | None -> auto-detect from system
+    "language":    None,      # "pt" | "en" | "pl" | None -> auto-detect from system
     "bg_color":    DEFAULT_BG,
     "accent_color": DEFAULT_ACCENT,
     # large-v3-turbo, not small: measured 29/07/2026, `small` locks into
@@ -243,11 +243,14 @@ def set_dark_titlebar(win):
 
 # ── i18n (PT default; EN translations keyed by the PT string) ──────────────────
 def _system_lang() -> str:
-    """Best-effort: 'pt' if the system UI/locale is Portuguese, else 'en'."""
+    """Best-effort UI language from the system locale: 'pt', 'pl' or 'en'."""
     try:
         lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
-        if (lcid & 0x3ff) == 0x16:          # LANG_PORTUGUESE
+        primary = lcid & 0x3FF
+        if primary == 0x16:          # LANG_PORTUGUESE
             return "pt"
+        if primary == 0x15:          # LANG_POLISH
+            return "pl"
         return "en"
     except Exception:
         pass
@@ -256,6 +259,8 @@ def _system_lang() -> str:
         loc = (locale.getlocale()[0] or "")
         if loc.lower().startswith(("pt", "portug")):
             return "pt"
+        if loc.lower().startswith(("pl", "polish")):
+            return "pl"
     except Exception:
         pass
     return "en"
@@ -444,6 +449,8 @@ _TR_EN = {
     "Erro: {e}": "Error: {e}",
     "Selecionar áudio": "Select audio",
     "Áudio": "Audio", "Todos": "All files",
+    # sentinel de transcrição vazia (antes era EN fixo no código)
+    "(nenhum conteúdo reconhecido)": "(no content recognized)",
     # dependency messagebox
     "Dependências ausentes": "Missing dependencies",
     "Para gravar áudio, instale as dependências:\n\n  pip install {pkgs}\n\n"
@@ -452,12 +459,212 @@ _TR_EN = {
         "Open a terminal and run the command above. Then restart {app}.",
 }
 
+# Traduções PT->PL, chave = frase PT (polonês, 25/09/2026).
+_TR_PL: dict = {
+    # header / meters
+    "MIC": "MIKROFON",
+    "SISTEMA": "SYSTEM",
+    # buttons
+    "Gravar": "Nagrywaj",
+    "Parar": "Zatrzymaj",
+    "Salvar": "Zapisz",
+    "Transcrever": "Transkrybuj",
+    "Excluir": "Usuń",
+    "Transcrever + excluir": "Transkrybuj + usuń",
+    "Reproduzir": "Odtwórz",
+    "Salvar + Transcrever": "Zapisz + transkrybuj",
+    "Tema:": "Motyw:",
+    "Fundo": "Tło",
+    "Destaque": "Akcent",
+    "Padrão": "Domyślny",
+    "Cor de fundo": "Kolor tła",
+    "Cor de destaque": "Kolor akcentu",
+    # links
+    "Opções": "Opcje",
+    "Ocultar opções": "Ukryj opcje",
+    "Transcrever…": "Transkrybuj…",
+    "← Gravar": "← Nagrywaj",
+    # advanced labels
+    "Entrada:": "Wejście:",
+    "Saída:": "Wyjście:",
+    "Pasta:": "Folder:",
+    "Alterar…": "Zmień…",
+    "Pasta de gravações": "Folder nagrań",
+    "Atualizar dispositivos": "Odśwież urządzenia",
+    "Processar em:": "Uruchom na:",
+    "Idioma:": "Język:",
+    "Criar atalho (Ctrl+Shift+R)": "Utwórz skrót (Ctrl+Shift+R)",
+    "Remover atalho": "Usuń skrót",
+    "Atalho criado — abra pelo Menu Iniciar ou com Ctrl+Shift+R.":
+        "Skrót utworzony — otwórz go z Menu Start lub za pomocą "
+        "Ctrl+Shift+R.",
+    "Atalho removido.": "Skrót usunięty.",
+    "Não foi possível criar o atalho: {e}":
+        "Nie udało się utworzyć skrótu: {e}",
+    "Preparando '{size}' no {dev} pela primeira vez — isso leva alguns minutos "
+    "e só acontece uma vez.":
+        "Przygotowywanie '{size}' na {dev} — pierwsza konfiguracja może "
+        "potrwać kilka minut i dzieje się tylko raz.",
+    # status — devices
+    "Pronto para gravar.": "Gotowe do nagrywania.",
+    "Buscando dispositivos…": "Wyszukiwanie urządzeń…",
+    "Erro ao listar dispositivos: {m}":
+        "Błąd podczas pobierania listy urządzeń: {m}",
+    "Nenhum dispositivo de áudio encontrado.": "Nie znaleziono urządzeń audio.",
+    "Atenção: nenhuma saída de áudio para loopback.":
+        "Uwaga: brak wyjścia audio dla loopbacku.",
+    "Não é possível atualizar dispositivos durante a gravação.":
+        "Nie można odświeżyć urządzeń podczas nagrywania.",
+    "Captura indisponível — instale soundcard, numpy e av.":
+        "Przechwytywanie niedostępne — zainstaluj soundcard, numpy i av.",
+    "Nenhuma fonte de áudio — abra Opções.":
+        "Brak źródła dźwięku — otwórz Opcje.",
+    # status — recording
+    "Gravando…  (mic + sistema)": "Nagrywanie…  (mikrofon + system)",
+    "microfone": "mikrofon",
+    "áudio do sistema": "dźwięk systemowy",
+    "Nenhuma fonte pôde ser capturada ({which}): {m}":
+        "Nie udało się przechwycić żadnego źródła ({which}): {m}",
+    "Falha ao capturar {which} (a outra fonte continua).":
+        "Nie udało się przechwycić {which} (pozostałe źródło działa nadal).",
+    "Salvando…": "Zapisywanie…",
+    "Erro ao salvar: {m}": "Błąd podczas zapisywania: {m}",
+    "Nenhum áudio capturado — verifique as fontes selecionadas.":
+        "Nie przechwycono żadnego dźwięku — sprawdź wybrane źródła.",
+    "Salvo: {n}  —  Escolha o que fazer:":
+        "Zapisano: {n}  —  Wybierz, co dalej:",
+    "Gravação salva: {n}": "Zapisano nagranie: {n}",
+    "Gravação descartada.": "Nagranie odrzucone.",
+    "Não foi possível excluir: {e}": "Nie udało się usunąć: {e}",
+    "Não foi possível excluir.": "Nie udało się usunąć.",
+    "Rascunho ao vivo desativado — transcrição em andamento.":
+        "Wyłączono szkic na żywo — transkrypcja już trwa.",
+    "Termine a gravação para trocar de tela.":
+        "Zakończ nagrywanie, aby zmienić ekran.",
+    "Termine a transcrição para trocar de tela.":
+        "Zakończ transkrypcję, aby zmienić ekran.",
+    "Termine a conversão para trocar de tela.":
+        "Zakończ konwersję, aby zmienić ekran.",
+    "Transcrição ao vivo (rascunho)": "Transkrypcja na żywo (szkic)",
+    "Fechando rascunho ao vivo…": "Zamykanie szkicu na żywo…",
+    "Salvo: {n}  —  refinando a transcrição…":
+        "Zapisano: {n}  —  dopracowywanie transkrypcji…",
+    "Rascunho mantido — passada final falhou: {e}":
+        "Szkic zachowano — ostateczne dopracowanie nie powiodło się: {e}",
+    "Transcrição final pronta: {n}": "Ostateczna transkrypcja gotowa: {n}",
+    "Transcrição final pronta (falha ao salvar o .txt).":
+        "Ostateczna transkrypcja gotowa (nie udało się zapisać pliku .txt).",
+    "Transcrição ao vivo atrasada — descartando áudio antigo do rascunho.":
+        "Transkrypcja na żywo nie nadąża — odrzucanie starszego audio "
+        "ze szkicu.",
+    "Transcrição ao vivo parou (a gravação continua).":
+        "Transkrypcja na żywo się zatrzymała (nagrywanie trwa nadal).",
+    # status — transcription
+    "Nada para transcrever.": "Nic do transkrypcji.",
+    "Nada para reproduzir.": "Nic do odtworzenia.",
+    "Arquivo não encontrado.": "Nie znaleziono pliku.",
+    "Já há uma transcrição em andamento.": "Transkrypcja już trwa.",
+    "Transcrição indisponível — instale openvino-genai.":
+        "Transkrypcja niedostępna — zainstaluj openvino-genai.",
+    "Transcrevendo {n}…": "Transkrybowanie {n}…",
+    "Transcrevendo… {p}%": "Transkrybowanie… {p}%",
+    "Baixando modelo '{size}' (primeira vez)…":
+        "Pobieranie modelu '{size}' (pierwszy raz)…",
+    "Sem internet — usando o modelo '{size}' embutido.":
+        "Brak internetu — używany jest wbudowany model '{size}'.",
+    "Preparando modelo no {dev}…": "Przygotowywanie modelu na {dev}…",
+    "Carregando áudio…": "Wczytywanie audio…",
+    "Atualizando modelo…": "Aktualizowanie modelu…",
+    "Modelo atualizado.": "Model zaktualizowany.",
+    "Nova versão {tag}": "Nowa wersja {tag}",
+    "Erro na transcrição: {e}": "Błąd transkrypcji: {e}",
+    "Transcrito, mas falha ao salvar o .txt.":
+        "Ztranskrybowano, ale nie udało się zapisać pliku .txt.",
+    "Transcrição salva: {n}. Áudio excluído.":
+        "Zapisano transkrypcję: {n}. Plik audio usunięty.",
+    "Transcrição salva: {n}": "Zapisano transkrypcję: {n}",
+    # transcribe section
+    "TRANSCRIÇÃO": "TRANSKRYPCJA",
+    "Escolher arquivo…": "Wybierz plik…",
+    "Transcrição cancelada.": "Transkrypcja anulowana.",
+    "Salvo: {n}": "Zapisano: {n}",
+    # tray
+    "Abrir": "Otwórz",
+    "Sair": "Zakończ",
+    "Reco — pronto": "Reco — gotowe",
+    "Reco — gravando {d}": "Reco — nagrywanie {d}",
+    "Reco — salvando gravação…": "Reco — zapisywanie nagrania…",
+    "Salvando antes de sair…": "Zapisywanie przed zakończeniem…",
+    "Reco — pausado {d}": "Reco — pauza {d}",
+    # pause / resume
+    "Pausar": "Wstrzymaj",
+    "Continuar": "Wznów",
+    "Pausado — {d} gravado.": "Wstrzymano — nagrano {d}.",
+    # convert section (video/heavy audio → light MP3)
+    "Converter…": "Konwertuj…",
+    "CONVERSÃO": "KONWERSJA",
+    "Escolher vídeo ou áudio…": "Wybierz wideo lub audio…",
+    "Selecionar vídeo ou áudio": "Wybierz plik wideo lub audio",
+    "Converter para MP3": "Konwertuj na MP3",
+    "MP3 leve: {sr} kHz mono, {br} kbps.":
+        "Lekki MP3: {sr} kHz mono, {br} kbps.",
+    "Origem: {a}": "Źródło: {a}",
+    "Convertendo… {p}%": "Konwertowanie… {p}%",
+    "MP3 salvo: {n}  ({a} → {b})": "Zapisano MP3: {n}  ({a} → {b})",
+    "O arquivo não tem faixa de áudio.": "Plik nie zawiera ścieżki dźwiękowej.",
+    "Falha ao converter: {e}": "Błąd konwersji: {e}",
+    "Já há uma conversão em andamento.": "Konwersja już trwa.",
+    "Conversão indisponível — instale av.":
+        "Konwersja niedostępna — zainstaluj av.",
+    "Vídeo": "Wideo",
+    "Abrir pasta": "Otwórz folder",
+    "Abrir transcrição": "Otwórz transkrypcję",
+    # recordings library (view "Gravações…")
+    "Gravações…": "Nagrania…",
+    "GRAVAÇÕES": "NAGRANIA",
+    "Buscar:": "Szukaj:",
+    "Arquivo": "Plik",
+    "Data": "Data",
+    "Duração": "Czas trwania",
+    "Atualizar": "Odśwież",
+    "Lendo gravações…": "Wczytywanie nagrań…",
+    "Nenhuma gravação encontrada.": "Nie znaleziono nagrań.",
+    "Selecione uma gravação.": "Zaznacz nagranie.",
+    "Enviada para a Lixeira: {n}": "Przeniesiono do Kosza: {n}",
+    # AI summary (library ✦ action, via the user's Claude Code CLI)
+    "Resumo IA": "Podsumowanie AI",
+    "Gerando resumo com o Claude…": "Generowanie podsumowania za pomocą Claude…",
+    "Resumo salvo: {n}": "Zapisano podsumowanie: {n}",
+    "Falha ao gerar o resumo: {e}":
+        "Nie udało się wygenerować podsumowania: {e}",
+    "Resumo indisponível — instale o Claude Code (comando 'claude').":
+        "Podsumowanie niedostępne — zainstaluj Claude Code "
+        "(polecenie 'claude').",
+    "Já há um resumo em andamento.": "Generowanie podsumowania już trwa.",
+    "Selecione um arquivo e clique em Transcrever.":
+        "Wybierz plik i kliknij Transkrybuj.",
+    "Selecione um arquivo válido.": "Wybierz prawidłowy plik.",
+    "Erro: {e}": "Błąd: {e}",
+    "Selecionar áudio": "Wybierz plik audio",
+    "Áudio": "Audio", "Todos": "Wszystkie pliki",
+    # dependency messagebox
+    "Dependências ausentes": "Brakujące zależności",
+    "Para gravar áudio, instale as dependências:\n\n  pip install {pkgs}\n\n"
+    "Abra um terminal e rode o comando acima. Depois, reinicie o {app}.":
+        "Aby nagrywać dźwięk, zainstaluj wymagane zależności:\n\n"
+        "  pip install {pkgs}\n\n"
+        "Otwórz terminal i wykonaj powyższe polecenie. "
+        "Następnie uruchom ponownie {app}.",
+    # sentinel de transcrição vazia (dodany razem z obsługą PL)
+    "(nenhum conteúdo reconhecido)": "(brak rozpoznanej mowy)",
+}
+
 
 def t(s: str) -> str:
     """Translate a PT string to the current language (PT = identity)."""
     if LANG == "pt":
         return s
-    return _TR_EN.get(s, s)
+    return (_TR_PL if LANG == "pl" else _TR_EN).get(s, s)
 
 
 def tf(s: str, **kw) -> str:
@@ -1273,15 +1480,23 @@ PROMPT_RESUMO = {
            "empty) and '## Action items' (bullets, with owners when stated). "
            "Stay faithful to the text; invent no names or facts. Reply with "
            "the markdown only."),
+    "pl": ("Otrzymujesz na stdin transkrypcję spotkania. Wypowiedzi mogą być "
+           "opatrzone etykietami 'Ja' (osoba, która nagrywała) i 'Rozmówca(y)' "
+           "(druga strona). Pisz po polsku, w czystym markdownie, dokładnie te "
+           "sekcje: '## Podsumowanie' (3-6 zdań), '## Decyzje' (lista "
+           "punktowana; 'brak zarejestrowanych', jeśli lista jest pusta) oraz "
+           "'## Zadania i następne kroki' (lista punktowana, z podaniem osoby "
+           "odpowiedzialnej, gdy wynika to z tekstu). Trzymaj się tekstu; nie "
+           "wymyślaj nazwisk ani faktów. Odpowiedz wyłącznie markdownem."),
 }
 
 # Speaker labels for channel-based diarization (mic = you; system loopback = who-
 # ever is on the call — count unknown, hence the plural).
 def _spk_me() -> str:
-    return "Eu" if LANG == "pt" else "Me"
+    return {"pt": "Eu", "pl": "Ja"}.get(LANG, "Me")
 
 def _spk_them() -> str:
-    return "Interlocutor(es)" if LANG == "pt" else "Speaker(s)"
+    return {"pt": "Interlocutor(es)", "pl": "Rozmówca(y)"}.get(LANG, "Speaker(s)")
 
 
 # ── Settings ──────────────────────────────────────────────────────────────────
@@ -1565,7 +1780,7 @@ class DualRecorder:
         folder = Path(out_dir) if out_dir else default_output_dir()
         folder.mkdir(parents=True, exist_ok=True)
         # 'reco' marks this as a dual-channel (mic+system) recording (see RECO_TAG).
-        prefix = "gravacao_reco" if LANG == "pt" else "recording_reco"
+        prefix = {"pt": "gravacao_reco", "pl": "nagranie_reco"}.get(LANG, "recording_reco")
         ts     = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         return MP3Writer(folder / f"{prefix}_{ts}.mp3",
                          CAPTURE_SR, out_sr, out_channels, bitrate)
@@ -2244,7 +2459,7 @@ class OVTranscriber:
                     text = "\n".join(tx for _, tx in segs)
 
                 if done_cb:
-                    done_cb(text or "(no content recognized)", None)
+                    done_cb(text or t("(nenhum conteúdo reconhecido)"), None)
             except Exception as e:
                 if done_cb:
                     done_cb(None, str(e))
@@ -2591,7 +2806,7 @@ class MLXTranscriber:
                     text = "\n".join(tx for _, tx in segs)
 
                 if done_cb:
-                    done_cb(text or "(no content recognized)", None)
+                    done_cb(text or t("(nenhum conteúdo reconhecido)"), None)
             except Exception as e:
                 if done_cb:
                     done_cb(None, str(e))
@@ -2720,7 +2935,7 @@ class VuMeter(tk.Canvas):
 IDLE, RECORDING, PAUSED, STOPPED, BUSY = (
     "idle", "recording", "paused", "stopped", "busy")
 
-LANG_LABELS = {"pt": "Português", "en": "English"}
+LANG_LABELS = {"pt": "Português", "en": "English", "pl": "Polski"}
 
 
 class App(tk.Tk):
@@ -3602,7 +3817,7 @@ class App(tk.Tk):
         return OUT_SR, OUT_CH, MP3_BR
 
     def _whisper_lang(self) -> str:
-        return "pt" if LANG == "pt" else "en"
+        return LANG
 
     def _start_rec(self):
         if not self._recorder:
@@ -3907,7 +4122,7 @@ class App(tk.Tk):
     def _autosave_txt(self, audio_path: Path, text: str):
         try:
             txt = audio_path.with_suffix(".txt")
-            txt.write_text(text or "(no content recognized)", encoding="utf-8")
+            txt.write_text(text or t("(nenhum conteúdo reconhecido)"), encoding="utf-8")
             return txt
         except Exception as e:
             print(f"[txt] {e}")
@@ -4419,7 +4634,7 @@ class App(tk.Tk):
                 # Sonnet é o meio-termo certo pra sumarização; quem preferir
                 # haiku (mais barato) ou o default da máquina, troca AQUI.
                 r = subprocess.run(
-                    [cli, "-p", PROMPT_RESUMO["pt" if LANG == "pt" else "en"],
+                    [cli, "-p", PROMPT_RESUMO.get(LANG, PROMPT_RESUMO["en"]),
                      "--model", "sonnet"],
                     input=texto, capture_output=True, text=True,
                     encoding="utf-8", errors="replace", timeout=900,
@@ -4891,7 +5106,7 @@ if __name__ == "__main__":
         tr.set_device(cfg.get("device", "AUTO"))
         ev = threading.Event(); out = {}
         tr.transcribe(
-            audio, lang=("pt" if LANG == "pt" else "en"), diarize=diar,
+            audio, lang=LANG, diarize=diar,
             aec=bool(cfg.get("aec")) and diar,
             progress_cb=lambda m: log.write_text(m + "\n", encoding="utf-8"),
             done_cb=lambda t_, e: (out.update(t=t_, e=e), ev.set()))

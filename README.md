@@ -5,7 +5,7 @@
 A small desktop app that captures the mic and the system output together
 (real WASAPI loopback — no "Stereo Mix" needed), saves a compact MP3, and
 transcribes it **on your machine**, labeling who said what. Nothing is uploaded.
-The interface is bilingual (Portuguese / English), auto-detected from your system.
+The interface is available in English, Portuguese and Polish, auto-detected from your system.
 
 Transcription runs in-process via **OpenVINO GenAI** on Windows/Linux (Intel
 **iGPU → NPU → CPU**, auto-selected) and via **MLX** on macOS Apple Silicon — so
@@ -63,7 +63,7 @@ the bundled app is fully self-contained (no Python, no ffmpeg).
   installed, one click turns a transcribed recording into `<name>.resumo.md`
   (summary, decisions, action items) using your local `claude` CLI. No API
   key, no cloud added to the app — and everything else works without it.
-- 🌐 **Bilingual UI** (PT/EN), auto-detected, switchable in Options.
+- 🌐 **Multilingual UI** (English, Portuguese and Polish), auto-detected, switchable in Options.
 - 🎨 **Custom theme** — pick background and accent colors in Options; text contrast
   adjusts automatically. Frameless window with its own title bar.
 - ▶️ Play back the last recording. Record and Transcribe are one-or-the-other views.
@@ -121,7 +121,7 @@ and it uses `small` instead.
 Aplicativo de desktop que captura o microfone e a saída do sistema juntos
 (loopback WASAPI de verdade — não precisa de "Mixagem estéreo"), salva um MP3
 compacto e transcreve **na sua máquina**, identificando quem falou. Nada é enviado
-para a nuvem. A interface é bilíngue (PT/EN), detectada pelo idioma do sistema.
+para a nuvem. A interface está disponível em português, inglês e polonês, detectada pelo idioma do sistema.
 
 A transcrição roda in-process via **OpenVINO GenAI** no Windows/Linux (Intel
 **iGPU → NPU → CPU**, automático) e via **MLX** no macOS Apple Silicon — então o
@@ -172,7 +172,7 @@ app empacotado é autossuficiente (sem Python, sem ffmpeg).
   instalado, um clique transforma uma gravação transcrita em
   `<nome>.resumo.md` (resumo, decisões, pendências) usando o seu `claude`
   local. Sem chave de API, sem nuvem no app — e todo o resto funciona sem ele.
-- 🌐 **Interface bilíngue** (PT/EN), detectada automaticamente, troca em Opções.
+- 🌐 **Interface em três idiomas** (português, inglês e polonês), detectada automaticamente, troca em Opções.
 - 🎨 **Tema personalizável** — escolha as cores de fundo e de destaque em Opções; o
   contraste do texto se ajusta sozinho. Janela sem moldura, com barra própria.
 - ▶️ Reproduza a última gravação. Gravar e Transcrever são telas alternadas (uma ou outra).
@@ -221,4 +221,131 @@ Scripts de apoio em `tools/` (rodam pelo fonte, não entram no executável): ver
 [docs/TOOLS.md](docs/TOOLS.md).
 
 ### Licença
+[MIT](LICENSE) © 2026 Gabriel dos Anjos
+
+---
+
+## Polski
+
+**Nagrywaj mikrofon *i* dźwięk komputera jednocześnie, a potem transkrybuj lokalnie — z rozdzieleniem mówców.**
+
+Aplikacja desktopowa, która przechwytuje mikrofon i dźwięk systemowy jednocześnie
+(prawdziwy loopback WASAPI — bez potrzeby „Miksu stereo"), zapisuje kompaktowy MP3
+i transkrybuje **na Twoim komputerze**, oznaczając, kto co powiedział. Nic nie trafia
+do chmury. Interfejs jest dostępny w trzech językach (polskim, angielskim i
+portugalskim), rozpoznawanych automatycznie po języku systemu.
+
+Transkrypcja działa in-process przez **OpenVINO GenAI** w Windows/Linux (Intel
+**iGPU → NPU → CPU**, wybierane automatycznie) oraz przez **MLX** na macOS z Apple
+Silicon — dzięki temu spakowana aplikacja jest w pełni samowystarczalna (bez
+Pythona, bez ffmpeg).
+
+### Funkcje
+- 🎙️ **Mikrofon i dźwięk systemowy jednocześnie** — nagraj spotkanie/rozmowę z obiema
+  stronami przez prawdziwy loopback WASAPI (działa nawet bez „Miksu stereo").
+- 🗣️ **Diaryzacja kanałowa** — mikrofon i system zapisywane są na osobnych kanałach,
+  więc transkrypcja rozróżnia **Ciebie** i **rozmówców** (etykiety zależą od języka
+  interfejsu, np. „Ja" / „Rozmówca(y)" po polsku). Zawsze aktywna.
+- 🔇 **Redukcja echa** — gdy słuchasz przez głośniki, dźwięk komputera przedostający
+  się do mikrofonu jest usuwany (offline'owy filtr adaptacyjny korzystający z
+  loopbacku jako sygnału odniesienia), więc rozmówca nie pojawia się zdublowany na
+  obu kanałach.
+- 📊 Wskaźniki poziomu na żywo dla mikrofonu i systemu, każdy z **przesuwanym suwakiem
+  wzmocnienia** — przeciągnij uchwyt po wskaźniku, aby podbić lub przyciszyć to, co
+  rejestruje dany kanał. Środek to wartość neutralna (**1,0×**, bez zmian); w lewo
+  ścisza do 0×, w prawo wzmacnia do **10×**, a aktualny mnożnik jest widoczny pod
+  paskiem. Przydatne, gdy mikrofon nagrywa znacznie ciszej niż dźwięk systemowy.
+  Wzmocnienie trafia do zapisywanego pliku i jest zapamiętywane między sesjami.
+- ⏸️ **Wstrzymaj / wznów** nagrywanie przed zapisaniem — czas pauzy nie trafia ani do
+  audio, ani do zegara, więc przerwa nie wyląduje w pliku.
+- 🔔 **Mieszka w zasobniku** — zamknięcie okna chowa Reco do obszaru powiadomień
+  (nagrywanie trwa dalej, a ikona otrzymuje czerwoną kropkę z upływającym czasem).
+  **Najedź kursorem** na ikonę, aby przywrócić kompaktowe okno nad zasobnik (stop,
+  start, konwersja, transkrypcja); **kliknięcie** przypina je; **prawy przycisk** daje
+  Nagrywaj/Zatrzymaj, Wstrzymaj/Wznów, Otwórz i Zakończ. Zakończenie w trakcie
+  nagrywania najpierw zapisuje MP3.
+- 🎧 Zapisuje kompaktowy **MP3** (16 kHz stereo, 96 kbps — mały, w zupełności
+  wystarczający dla mowy), kodowany *w trakcie* nagrywania: zatrzymanie jest
+  natychmiastowe, niezależnie od tego, jak długie było spotkanie.
+- 📝 **Lokalna transkrypcja**, która automatycznie zapisuje `.txt` obok nagrań.
+  Bez chmury, w 100% prywatne.
+- 🔴 **Transkrypcja na żywo (szkic)** — opcjonalna, domyślnie wyłączona (Opcje):
+  pokazuje tekst w miarę nagrywania, na iGPU. To *szkic* — segmenty domykane
+  (oparte na VAD), a nie okno przesuwne, więc linia nigdy nie przepisuje się po
+  pojawieniu. Po zatrzymaniu finalny przebieg (ten sam silnik co w zwykłej
+  transkrypcji — diaryzacja kanałowa + redukcja echa + dominancja) zastępuje szkic.
+  **Nowość** — wypróbuj na jednym ze swoich spotkań, zanim zaufasz temu przy długim
+  nagraniu.
+- 🎵 **MP4 → MP3** — wybierz film (lub „ciężki" plik audio) w widoku Transkrypcji i
+  kliknij *Konwertuj na MP3*: plik zostaje przekodowany do tego samego lekkiego
+  formatu, w którym nagrywa Reco (16 kHz mono, 64 kbps) — zwykle to ułamek
+  pierwotnego rozmiaru. MP3 zapisuje się obok pliku źródłowego i pozostaje
+  zaznaczony, gotowy do transkrypcji.
+- 🗂️ **Biblioteka nagrań** — widok *Nagrania…* wypisuje wszystko z folderu nagrań
+  (data, długość, stan transkrypcji) i przeszukuje po nazwie pliku **oraz treści
+  transkrypcji**. Odtwarzanie, transkrypcja, otwarcie `.txt` czy usunięcie (do Kosza)
+  w jednym miejscu.
+- ✦ **Podsumowanie AI (opcjonalne)** — z zainstalowanym
+  [Claude Code](https://claude.com/claude-code) jedno kliknięcie zamienia
+  ztranskrybowane nagranie w `<nazwa>.resumo.md` (podsumowanie, decyzje, zadania do
+  wykonania) przy użyciu lokalnego `claude` CLI. Bez klucza API, bez dodatkowej
+  chmury — a cała reszta działa bez niego.
+- 🌐 **Interfejs w trzech językach** (polski, angielski, portugalski), rozpoznawany
+  automatycznie, zmiana w Opcjach.
+- 🎨 **Własny motyw** — wybierz kolory tła i akcentu w Opcjach; kontrast tekstu
+  dostosowuje się sam. Okno bez ramki, z własnym paskiem tytułu.
+- ▶️ Odtwórz ostatnie nagranie. Nagrywanie i Transkrypcja to naprzemienne widoki
+  (jeden albo drugi).
+
+> Windows 10/11 (używa WASAPI). Nagrania trafiają do `Dokumenty\Reco` (do zmiany w Opcjach).
+
+### Uruchomienie ze źródeł
+```powershell
+pip install -r requirements.txt
+python reco.py
+```
+Albo uruchom `./setup.ps1`, aby zainstalować zależności. Opcjonalny skrót
+**Ctrl+Shift+R** jest *opt-in* — włącz go w aplikacji Reco w **Opcjach** (nigdy
+nie jest tworzony automatycznie).
+
+Wymagane: `soundcard`, `numpy`, `av`, `scipy`, `huggingface_hub`.
+Backend transkrypcji: `openvino` + `openvino-genai` + `openvino-tokenizers`
+(Windows/Linux) albo `mlx-whisper` (macOS Apple Silicon).
+
+### Zbudowanie samodzielnej aplikacji
+```powershell
+./build.ps1 -Clean      # -> dist/Reco/Reco.exe  (folder, ~810 MB)
+```
+Build onedir: dystrybuuj cały folder **`dist/Reco/`** i uruchom `Reco.exe` wewnątrz
+niego. To **plug-n-play** — bez Pythona, bez ffmpeg; runtime OpenVINO jest w pakiecie,
+a runtime VC++ również jest dołączony. Model Whisper **`small`** jest w pakiecie jako
+fallback offline; **domyślnym modelem jest `large-v3-turbo`**, który przy pierwszej
+transkrypcji pobiera się (~0,8 GB) — bez internetu nie ma pobierania i używa wtedy
+`small`.
+
+Na maszynie z Linuksem przenośną wersję na Windows można zbudować bez Windowsa:
+`./build-win-portable.sh` uruchamia ten sam build (PyInstaller + model) przez Wine
+i pakuje wynik do `dist/Reco-portable-win11-x64.zip`.
+
+### Jak to działa
+- Przechwytywanie wykorzystuje `soundcard` (WASAPI): każde fizyczne urządzenie pojawia
+  się na liście raz, mikrofony i głośniki są rozdzielone, a dźwięk systemowy jest
+  przechwytywany przez prawdziwy loopback.
+- Nagrywanie ma ustalone **16 kHz stereo** (L = mikrofon, R = system), 96 kbps —
+  dokładnie to, czego potrzebują transkrypcja, diaryzacja i redukcja echa.
+- Kodowanie i dekodowanie realizuje PyAV (dołączone biblioteki ffmpeg). MP3 jest
+  zapisywany w miarę napływania dźwięku, więc zużycie pamięci pozostaje stabilne, a
+  zatrzymanie jedynie domyka plik. Transkrypcja używa Whispera
+  **large-v3-turbo INT8** przez OpenVINO GenAI (iGPU/NPU/CPU) lub MLX (GPU Apple).
+  Domyślnie wybrana jest iGPU — zmierzona tu jako najszybsza: 2 h audio w ~19 min od
+  początku do końca **z włączoną diaryzacją**, która transkrybuje oba kanały i przez
+  to wykonuje podwójną pracę (~10 min bez niej). Urządzenie można wybrać, bo NPU
+  sprawdza się lepiej podczas wideorozmowy: prawie nie odczuwa równoległego
+  obciążenia, podczas gdy iGPU konkurowałoby z rysowaniem obrazu.
+- Model jest pobierany raz (albo dołączony do `.exe`) i przechowywany w lokalnym cache.
+
+Skrypty pomocnicze w `tools/` (uruchamiane ze źródeł, nie trafiają do pliku
+wykonywalnego): zobacz [docs/TOOLS.md](docs/TOOLS.md).
+
+### Licencja
 [MIT](LICENSE) © 2026 Gabriel dos Anjos
